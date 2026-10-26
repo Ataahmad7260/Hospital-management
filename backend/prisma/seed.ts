@@ -42,12 +42,15 @@ async function main() {
       lastName: 'Administrator',
       role: Role.ADMIN,
       phoneNumber: '+1-555-0100',
-      adminProfile: {
-        create: {
-          department: 'Executive Administration',
-          designation: 'Hospital Superintendent',
-        },
-      },
+    },
+  });
+  await prisma.adminProfile.upsert({
+    where: { userId: admin.id },
+    update: {},
+    create: {
+      userId: admin.id,
+      department: 'Executive Administration',
+      designation: 'Hospital Superintendent',
     },
   });
 
@@ -63,17 +66,20 @@ async function main() {
       lastName: 'Smith',
       role: Role.DOCTOR,
       phoneNumber: '+1-555-0101',
-      doctorProfile: {
-        create: {
-          specialization: 'Consultant Cardiologist',
-          licenseNumber: 'MD-CARD-9921',
-          qualifications: ['MBBS', 'MD Cardiology', 'FACC'],
-          consultationFee: 75.0,
-          roomNumber: 'Suite 302',
-          departmentId: cardiology.id,
-          availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-        },
-      },
+    },
+  });
+  await prisma.doctorProfile.upsert({
+    where: { userId: doctor.id },
+    update: {},
+    create: {
+      userId: doctor.id,
+      specialization: 'Consultant Cardiologist',
+      licenseNumber: 'MD-CARD-9921',
+      qualifications: ['MBBS', 'MD Cardiology', 'FACC'],
+      consultationFee: 75.0,
+      roomNumber: 'Suite 302',
+      departmentId: cardiology.id,
+      availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
     },
   });
 
@@ -89,12 +95,15 @@ async function main() {
       lastName: 'Turner',
       role: Role.PHARMACIST,
       phoneNumber: '+1-555-0102',
-      pharmacistProfile: {
-        create: {
-          licenseNumber: 'RPH-88421',
-          pharmacyBlock: 'Ground Floor Central Dispensary',
-        },
-      },
+    },
+  });
+  await prisma.pharmacistProfile.upsert({
+    where: { userId: pharmacist.id },
+    update: {},
+    create: {
+      userId: pharmacist.id,
+      licenseNumber: 'RPH-88421',
+      pharmacyBlock: 'Ground Floor Central Dispensary',
     },
   });
 
@@ -110,17 +119,20 @@ async function main() {
       lastName: 'Doe',
       role: Role.PATIENT,
       phoneNumber: '+1-555-0103',
-      patientProfile: {
-        create: {
-          gender: Gender.FEMALE,
-          bloodGroup: BloodGroup.O_POSITIVE,
-          address: '42 Baker Street, Metropolis',
-          emergencyContactName: 'John Doe',
-          emergencyContactPhone: '+1-555-0199',
-          allergies: ['Penicillin'],
-          chronicDiseases: ['Mild Hypertension'],
-        },
-      },
+    },
+  });
+  await prisma.patientProfile.upsert({
+    where: { userId: patient.id },
+    update: {},
+    create: {
+      userId: patient.id,
+      gender: Gender.FEMALE,
+      bloodGroup: BloodGroup.O_POSITIVE,
+      address: '42 Baker Street, Metropolis',
+      emergencyContactName: 'John Doe',
+      emergencyContactPhone: '+1-555-0199',
+      allergies: ['Penicillin'],
+      chronicDiseases: ['Mild Hypertension'],
     },
   });
 
