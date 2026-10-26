@@ -7,6 +7,8 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+
 @ApiTags('Prescriptions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,9 +25,9 @@ export class PrescriptionsController {
 
   @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
   @Get()
-  @ApiOperation({ summary: 'List prescriptions' })
-  async findAll() {
-    return this.prescriptionsService.findAll();
+  @ApiOperation({ summary: 'List prescriptions scoped by role' })
+  async findAll(@CurrentUser() user: any) {
+    return this.prescriptionsService.findAll(user);
   }
 
   @Roles(Role.PHARMACIST)

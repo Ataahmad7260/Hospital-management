@@ -127,6 +127,10 @@ class ApiService {
     return this.request<Patient[]>('/patients');
   }
 
+  getMyPatientProfile(): Promise<Patient> {
+    return this.request<Patient>('/patients/me');
+  }
+
   getPatient(id: string): Promise<Patient> {
     return this.request<Patient>(`/patients/${id}`);
   }

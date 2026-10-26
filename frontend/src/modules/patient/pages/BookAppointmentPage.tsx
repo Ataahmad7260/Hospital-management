@@ -19,10 +19,10 @@ import type { Appointment, Doctor, Patient } from '../../../shared/types';
 import { useAuth } from '../../../shared/context/AuthContext';
 
 export const BookAppointmentPage: React.FC = () => {
-  const { showToast } = useAuth();
+  const { showToast, currentUser } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [myProfile, setMyProfile] = useState<Patient | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [form, setForm] = useState({
@@ -39,17 +39,17 @@ export const BookAppointmentPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [apts, dList, pList] = await Promise.all([
+      const [apts, dList, profile] = await Promise.all([
         api.getAppointments(),
         api.getDoctors(),
-        api.getPatients(),
+        api.getMyPatientProfile(),
       ]);
       setAppointments(apts);
       setDoctors(dList);
-      setPatients(pList);
+      setMyProfile(profile);
 
-      if (pList.length > 0 && !form.patientId) {
-        setForm((prev) => ({ ...prev, patientId: pList[0].id }));
+      if (profile?.id) {
+        setForm((prev) => ({ ...prev, patientId: profile.id }));
       }
       if (dList.length > 0 && !form.doctorId) {
         setForm((prev) => ({ ...prev, doctorId: dList[0].id }));
@@ -160,18 +160,18 @@ export const BookAppointmentPage: React.FC = () => {
           </FormGroup>
 
           <FormGroup label="Patient">
-            <select
-              value={form.patientId}
-              onChange={(e) => setForm({ ...form, patientId: e.target.value })}
-              required
-            >
-              <option value="">Select patient account...</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.user.firstName} {p.user.lastName} ({p.user.email})
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value={
+                myProfile?.user
+                  ? `${myProfile.user.firstName} ${myProfile.user.lastName} (${myProfile.user.email})`
+                  : currentUser
+                  ? `${currentUser.firstName} ${currentUser.lastName} (${currentUser.email})`
+                  : 'Authenticated Patient'
+              }
+              disabled
+              className="opacity-80 cursor-not-allowed bg-mono-950 font-mono text-xs"
+            />
           </FormGroup>
 
           <FormRow columns={2}>

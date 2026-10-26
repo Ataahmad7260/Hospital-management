@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, FileText, CreditCard, Stethoscope, Plus } from 'lucide-react';
+import { Calendar, FileText, CreditCard, Stethoscope, Plus, HeartPulse, ShieldAlert, Phone } from 'lucide-react';
 import {
   Card,
   KPICard,
@@ -11,9 +11,11 @@ import {
   TableCell,
   StatusPill,
   Button,
+  Badge,
 } from '../../../shared/ui';
 import { api } from '../../../shared/api';
-import type { Appointment, Prescription, Bill, Doctor } from '../../../shared/types';
+import type { Appointment, Prescription, Bill, Doctor, Patient } from '../../../shared/types';
+
 export const PatientDashboard: React.FC<{
   onBookAppointment?: () => void;
   onViewPrescriptions?: () => void;
@@ -23,6 +25,7 @@ export const PatientDashboard: React.FC<{
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [myProfile, setMyProfile] = useState<Patient | null>(null);
 
   useEffect(() => {
     loadData();
@@ -30,16 +33,18 @@ export const PatientDashboard: React.FC<{
 
   const loadData = async () => {
     try {
-      const [apts, rxList, bls, docs] = await Promise.all([
+      const [apts, rxList, bls, docs, profile] = await Promise.all([
         api.getAppointments(),
         api.getPrescriptions(),
         api.getBills(),
         api.getDoctors(),
+        api.getMyPatientProfile().catch(() => null),
       ]);
       setAppointments(apts);
       setPrescriptions(rxList);
       setBills(bls);
       setDoctors(docs);
+      if (profile) setMyProfile(profile);
     } catch (e) {
       console.error(e);
     }
@@ -51,6 +56,55 @@ export const PatientDashboard: React.FC<{
 
   return (
     <div className="portal-page">
+      {/* Patient Own Profile Header Banner */}
+      {myProfile && (
+        <div className="bg-mono-900 border border-mono-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-mono-800 border border-mono-700 flex items-center justify-center font-mono font-bold text-sm text-white">
+              {myProfile.user?.firstName?.[0]}
+              {myProfile.user?.lastName?.[0]}
+            </div>
+            <div>
+              <div className="text-sm font-bold text-white flex items-center gap-2">
+                <span>
+                  {myProfile.user?.firstName} {myProfile.user?.lastName}
+                </span>
+                <Badge variant="outline" size="sm">
+                  Patient File #{myProfile.id.slice(-6).toUpperCase()}
+                </Badge>
+              </div>
+              <div className="text-xs text-mono-400 font-mono flex items-center gap-2 mt-0.5">
+                <span>Blood: {myProfile.bloodGroup || 'UNKNOWN'}</span>
+                <span>&bull;</span>
+                <span>Gender: {myProfile.gender || 'OTHER'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs font-mono">
+            {myProfile.emergencyContactPhone && (
+              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
+                <Phone size={12} className="text-mono-400" />
+                <span>ICE: {myProfile.emergencyContactPhone}</span>
+              </div>
+            )}
+            {myProfile.allergies && myProfile.allergies.length > 0 && (
+              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
+                <ShieldAlert size={12} className="text-mono-400" />
+                <span>Allergies: {myProfile.allergies.join(', ')}</span>
+              </div>
+            )}
+            {myProfile.chronicDiseases && myProfile.chronicDiseases.length > 0 && (
+              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
+                <HeartPulse size={12} className="text-mono-400" />
+                <span>Regimen: {myProfile.chronicDiseases.join(', ')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* KPI Grid */}
       <div className="kpi-grid">
         <KPICard
           label="My Scheduled Visits"

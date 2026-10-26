@@ -5,6 +5,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { AppointmentStatus } from '@prisma/client';
 
@@ -18,15 +19,15 @@ export class AppointmentsController {
   @Roles(Role.ADMIN, Role.PATIENT)
   @Post()
   @ApiOperation({ summary: 'Book an appointment with a doctor' })
-  async create(@Body() dto: CreateAppointmentDto) {
-    return this.appointmentsService.create(dto);
+  async create(@Body() dto: CreateAppointmentDto, @CurrentUser() user: any) {
+    return this.appointmentsService.create(dto, user);
   }
 
   @Roles(Role.ADMIN, Role.DOCTOR, Role.PATIENT)
   @Get()
-  @ApiOperation({ summary: 'List appointments' })
-  async findAll() {
-    return this.appointmentsService.findAll();
+  @ApiOperation({ summary: 'List appointments scoped to user role' })
+  async findAll(@CurrentUser() user: any) {
+    return this.appointmentsService.findAll(user);
   }
 
   @Roles(Role.ADMIN, Role.DOCTOR)

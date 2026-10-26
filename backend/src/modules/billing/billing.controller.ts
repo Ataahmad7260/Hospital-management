@@ -7,6 +7,8 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+
 @ApiTags('Billing & Invoicing')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,8 +26,8 @@ export class BillingController {
   @Roles(Role.ADMIN, Role.PATIENT)
   @Get()
   @ApiOperation({ summary: 'Admin & Patient: List billing invoices' })
-  async findAll() {
-    return this.billingService.findAll();
+  async findAll(@CurrentUser() user: any) {
+    return this.billingService.findAll(user);
   }
 
   @Roles(Role.ADMIN)

@@ -36,8 +36,15 @@ export class BillingService {
     });
   }
 
-  async findAll() {
+  async findAll(user?: any) {
+    let whereClause = {};
+
+    if (user?.role === 'PATIENT') {
+      whereClause = { patient: { userId: user.id } };
+    }
+
     return this.prisma.bill.findMany({
+      where: whereClause,
       include: {
         patient: {
           include: { user: { select: { firstName: true, lastName: true } } },

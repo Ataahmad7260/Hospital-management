@@ -222,6 +222,10 @@ class ApiService {
     return this.request<Patient[]>('/patients');
   }
 
+  getMyPatientProfile() {
+    return this.request<Patient>('/patients/me');
+  }
+
   // Appointments
   getAppointments() {
     return this.request<Appointment[]>('/appointments');
