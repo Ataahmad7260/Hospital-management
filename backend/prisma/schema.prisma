@@ -1,0 +1,354 @@
+// Hospital Management System - Prisma Schema for MongoDB
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+enum Role {
+  ADMIN
+  DOCTOR
+  PATIENT
+  PHARMACIST
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  UNKNOWN
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PrescriptionStatus {
+  ISSUED
+  DISPENSED
+  PARTIALLY_DISPENSED
+  CANCELLED
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  INSURANCE
+  ONLINE
+  UPI
+}
+
+// ----------------------------------------------------
+// EMBEDDED TYPES (MongoDB Native Composite Types)
+// ----------------------------------------------------
+
+type VitalSigns {
+  bloodPressure    String? // e.g. 120/80 mmHg
+  heartRate        Int? // bpm
+  temperature      Float? // °C or °F
+  respiratoryRate  Int? // breaths/min
+  oxygenSaturation Float? // SpO2 %
+  weightKg         Float? // kg
+  heightCm         Float? // cm
+  recordedAt       DateTime @default(now())
+}
+
+type PrescriptionItem {
+  medicineName String
+  dosage       String // e.g. 500mg
+  frequency    String // e.g. 1-0-1 (twice daily after meals)
+  durationDays Int // e.g. 5
+  instructions String? // e.g. Take after breakfast
+  dispensed    Boolean @default(false)
+}
+
+type BillItem {
+  description String
+  quantity    Int    @default(1)
+  unitPrice   Float
+  total       Float
+}
+
+// ----------------------------------------------------
+// CORE USER & AUTH MODEL
+// ----------------------------------------------------
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(PATIENT)
+  firstName    String
+  lastName     String
+  phoneNumber  String?
+  avatarUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 1-to-1 Role-specific Profiles
+  doctorProfile     DoctorProfile?
+  patientProfile    PatientProfile?
+  pharmacistProfile PharmacistProfile?
+  adminProfile      AdminProfile?
+
+  // Audit Logs triggered by this user
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+// ----------------------------------------------------
+// ROLE PROFILES
+// ----------------------------------------------------
+
+model AdminProfile {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department  String?
+  designation String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("admin_profiles")
+}
+
+model DoctorProfile {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String          @unique @db.ObjectId
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization  String
+  licenseNumber   String          @unique
+  qualifications  String[]        @default([])
+  consultationFee Float           @default(0.0)
+  roomNumber      String?
+  departmentId    String?         @db.ObjectId
+  department      Department?     @relation(fields: [departmentId], references: [id])
+  availableDays   String[]        @default(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
+  appointments    Appointment[]
+  prescriptions   Prescription[]
+  medicalRecords  MedicalRecord[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("doctor_profiles")
+}
+
+model PatientProfile {
+  id                    String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String          @unique @db.ObjectId
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth           DateTime?
+  gender                Gender          @default(OTHER)
+  bloodGroup            BloodGroup      @default(UNKNOWN)
+  address               String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  allergies             String[]        @default([])
+  chronicDiseases       String[]        @default([])
+  appointments          Appointment[]
+  medicalRecords        MedicalRecord[]
+  prescriptions         Prescription[]
+  bills                 Bill[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@map("patient_profiles")
+}
+
+model PharmacistProfile {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String         @unique @db.ObjectId
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  licenseNumber String         @unique
+  pharmacyBlock String?
+  prescriptions DispensedLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("pharmacist_profiles")
+}
+
+// ----------------------------------------------------
+// HOSPITAL INFRASTRUCTURE & CLINICAL
+// ----------------------------------------------------
+
+model Department {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  name        String          @unique
+  code        String          @unique
+  description String?
+  doctors     DoctorProfile[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("departments")
+}
+
+model Appointment {
+  id              String            @id @default(auto()) @map("_id") @db.ObjectId
+  doctorId        String            @db.ObjectId
+  doctor          DoctorProfile     @relation(fields: [doctorId], references: [id])
+  patientId       String            @db.ObjectId
+  patient         PatientProfile    @relation(fields: [patientId], references: [id])
+  appointmentDate DateTime
+  timeSlot        String // e.g. "10:00 - 10:30 AM"
+  status          AppointmentStatus @default(PENDING)
+  reason          String?
+  doctorNotes     String?
+  medicalRecord   MedicalRecord?
+  bill            Bill?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@map("appointments")
+}
+
+model MedicalRecord {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  patientId     String         @db.ObjectId
+  patient       PatientProfile @relation(fields: [patientId], references: [id])
+  doctorId      String         @db.ObjectId
+  doctor        DoctorProfile  @relation(fields: [doctorId], references: [id])
+  appointmentId String?        @unique @db.ObjectId
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id])
+  diagnosis     String
+  symptoms      String[]       @default([])
+  clinicalNotes String?
+  vitals        VitalSigns?
+  prescriptions Prescription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("medical_records")
+}
+
+model Prescription {
+  id              String             @id @default(auto()) @map("_id") @db.ObjectId
+  prescriptionNo  String             @unique
+  patientId       String             @db.ObjectId
+  patient         PatientProfile     @relation(fields: [patientId], references: [id])
+  doctorId        String             @db.ObjectId
+  doctor          DoctorProfile      @relation(fields: [doctorId], references: [id])
+  medicalRecordId String?            @db.ObjectId
+  medicalRecord   MedicalRecord?     @relation(fields: [medicalRecordId], references: [id])
+  items           PrescriptionItem[]
+  status          PrescriptionStatus @default(ISSUED)
+  doctorNotes     String?
+  dispensedLogs   DispensedLog[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("prescriptions")
+}
+
+model DispensedLog {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  prescriptionId String            @db.ObjectId
+  prescription   Prescription      @relation(fields: [prescriptionId], references: [id])
+  pharmacistId   String            @db.ObjectId
+  pharmacist     PharmacistProfile @relation(fields: [pharmacistId], references: [id])
+  dispensedItems String[] // names of medicines dispensed in this batch
+  notes          String?
+  dispensedAt    DateTime          @default(now())
+
+  @@map("dispensed_logs")
+}
+
+// ----------------------------------------------------
+// PHARMACY & INVENTORY
+// ----------------------------------------------------
+
+model Medicine {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  genericName   String?
+  category      String // Tablet, Syrup, Injection, Capsule, etc.
+  manufacturer  String?
+  batchNumber   String
+  stockQuantity Int      @default(0)
+  reorderLevel  Int      @default(10)
+  unitPrice     Float
+  expiryDate    DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("medicines")
+}
+
+// ----------------------------------------------------
+// BILLING & INVOICING
+// ----------------------------------------------------
+
+model Bill {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceNumber  String         @unique
+  patientId      String         @db.ObjectId
+  patient        PatientProfile @relation(fields: [patientId], references: [id])
+  appointmentId  String?        @unique @db.ObjectId
+  appointment    Appointment?   @relation(fields: [appointmentId], references: [id])
+  items          BillItem[]
+  subtotal       Float
+  taxAmount      Float          @default(0.0)
+  discountAmount Float          @default(0.0)
+  totalAmount    Float
+  paidAmount     Float          @default(0.0)
+  status         BillStatus     @default(PENDING)
+  paymentMethod  PaymentMethod  @default(CASH)
+  paidAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("bills")
+}
+
+// ----------------------------------------------------
+// AUDIT & COMPLIANCE
+// ----------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String?  @db.ObjectId
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String // e.g. "USER_LOGIN", "PRESCRIPTION_DISPENSED", "PATIENT_CREATED"
+  resource   String // e.g. "Prescription", "Patient"
+  resourceId String?
+  details    String? // JSON string or summary
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
