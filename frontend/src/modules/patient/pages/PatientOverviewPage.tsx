@@ -4,7 +4,6 @@ import {
   Search,
   Filter,
   DollarSign,
-  CheckCircle2,
   Clock,
   Eye,
   CreditCard,
@@ -34,7 +33,7 @@ import type { PatientOverviewRecord } from '../../../shared/types';
 import { useAuth } from '../../../shared/context/AuthContext';
 
 export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ onAdmitClick }) => {
-  const { showToast, currentUser } = useAuth();
+  const { showToast, currentUser, role } = useAuth();
   const [records, setRecords] = useState<PatientOverviewRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -68,17 +67,49 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
     }
   };
 
-  const openPaymentModal = (record: PatientOverviewRecord) => {
-    if (!record.billing) return;
-    const remaining = record.billing.totalAmount - (record.billing.paidAmount || 0);
+  const getCaseBills = (record: PatientOverviewRecord) => {
+    const map = new Map<string, any>();
+    if (record.consultationBill) map.set(record.consultationBill.id, record.consultationBill);
+    for (const pb of record.pharmacyBills || []) {
+      map.set(pb.id, pb);
+    }
+    if (record.billing && !map.has(record.billing.id)) {
+      map.set(record.billing.id, record.billing);
+    }
+    const all = Array.from(map.values());
+    const consultBill =
+      record.consultationBill ||
+      all.find((b) => b.billType === 'CONSULTATION' || !b.billType) ||
+      null;
+    const pharmacyBills =
+      record.pharmacyBills && record.pharmacyBills.length > 0
+        ? record.pharmacyBills
+        : all.filter((b) => b.billType === 'PHARMACY');
+    return { consultBill, pharmacyBills, all };
+  };
+
+  const openPaymentModal = (
+    record: PatientOverviewRecord,
+    targetBill?: {
+      id: string;
+      invoiceNumber: string;
+      totalAmount: number;
+      paidAmount?: number;
+      billType?: string;
+    },
+  ) => {
+    const { all } = getCaseBills(record);
+    const bill = targetBill || all.find((b) => b.status !== 'PAID') || record.billing;
+    if (!bill) return;
+    const remaining = bill.totalAmount - (bill.paidAmount || 0);
     setPayingBill({
-      billId: record.billing.id,
-      invoiceNumber: record.billing.invoiceNumber,
+      billId: bill.id,
+      invoiceNumber: bill.invoiceNumber,
       patientName: `${record.patient.firstName} ${record.patient.lastName}`,
-      totalAmount: record.billing.totalAmount,
-      paidAmount: record.billing.paidAmount || 0,
+      totalAmount: bill.totalAmount,
+      paidAmount: bill.paidAmount || 0,
     });
-    setPayAmountInput(remaining > 0 ? remaining : record.billing.totalAmount);
+    setPayAmountInput(remaining > 0 ? remaining : bill.totalAmount);
   };
 
   const handleProcessPayment = async (e: React.FormEvent) => {
@@ -107,11 +138,12 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
 
     if (!matchesSearch) return false;
 
+    const { all } = getCaseBills(r);
     if (filterStatus === 'PAID') {
-      return r.billing?.status === 'PAID';
+      return all.length > 0 && all.every((b) => b.status === 'PAID');
     }
     if (filterStatus === 'UNPAID') {
-      return r.billing?.status === 'PENDING' || r.billing?.status === 'PARTIALLY_PAID';
+      return all.some((b) => b.status === 'PENDING' || b.status === 'PARTIALLY_PAID');
     }
     if (filterStatus === 'PRESCRIBED') {
       return r.prescriptions.length > 0;
@@ -119,18 +151,25 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
     return true;
   });
 
-  const totalCollected = records.reduce((sum, r) => sum + (r.billing?.paidAmount || 0), 0);
+  const totalCollected = records.reduce((sum, r) => {
+    const { all } = getCaseBills(r);
+    return sum + all.reduce((s, b) => s + (b.paidAmount || 0), 0);
+  }, 0);
   const totalOutstanding = records.reduce((sum, r) => {
-    if (r.billing && r.billing.status !== 'PAID') {
-      return sum + (r.billing.totalAmount - (r.billing.paidAmount || 0));
-    }
-    return sum;
+    const { all } = getCaseBills(r);
+    return (
+      sum +
+      all.reduce(
+        (s, b) => (b.status !== 'PAID' ? s + Math.max(0, b.totalAmount - (b.paidAmount || 0)) : s),
+        0,
+      )
+    );
   }, 0);
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       {/* Top Ledger Header & Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
         <div className="bg-card border border-border rounded-xl p-4 shadow-xs">
           <div className="text-[0.68rem] text-muted-foreground uppercase font-medium flex items-center gap-1.5">
             <Activity size={13} className="text-primary" />
@@ -198,8 +237,8 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
         }
       >
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
-          <div className="relative flex-1 min-w-[240px] max-w-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-border min-w-0 max-w-full">
+          <div className="relative flex-1 w-full sm:w-auto sm:min-w-[220px] max-w-md min-w-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="text"
@@ -210,7 +249,7 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
             />
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs max-w-full">
             <span className="text-muted-foreground mr-1 flex items-center gap-1">
               <Filter size={11} /> Filter:
             </span>
@@ -251,8 +290,8 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
                 year: 'numeric',
               });
 
-              const isPaid = item.billing?.status === 'PAID';
-              const hasOutstanding = item.billing && item.billing.status !== 'PAID';
+              const { consultBill, pharmacyBills, all } = getCaseBills(item);
+              const firstPendingBill = all.find((b) => b.status !== 'PAID') || null;
 
               return (
                 <TableRow key={item.id}>
@@ -332,30 +371,42 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
                     )}
                   </TableCell>
 
-                  {/* Money Paid / Billing */}
+                  {/* Money Paid / Two-Stage Billing */}
                   <TableCell>
-                    {item.billing ? (
-                      <div>
-                        <div className="flex items-center gap-1.5 font-mono">
-                          <span className="text-xs font-bold text-foreground">
-                            ${(item.billing.paidAmount || 0).toFixed(2)}
-                          </span>
-                          <span className="text-muted-foreground text-[0.68rem]">
-                            / ${(item.billing.totalAmount).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-1">
-                          <Badge
-                            variant={isPaid ? 'success' : 'warning'}
-                            className="font-mono text-[0.62rem]"
-                          >
-                            {isPaid && <CheckCircle2 size={9} className="mr-0.5" />}
-                            {item.billing.status}
-                          </Badge>
-                          <span className="text-[0.65rem] text-muted-foreground font-mono">
-                            {item.billing.paymentMethod}
-                          </span>
-                        </div>
+                    {role === 'DOCTOR' ? (
+                      <div className="text-muted-foreground text-xs font-mono">
+                        <span>Clinical View Only</span>
+                      </div>
+                    ) : all.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {consultBill && (
+                          <div className="flex items-center gap-1.5 font-mono text-[0.68rem]">
+                            <span className="text-muted-foreground">Consult:</span>
+                            <span className="font-bold text-foreground">
+                              ${consultBill.totalAmount.toFixed(2)}
+                            </span>
+                            <Badge
+                              variant={consultBill.status === 'PAID' ? 'success' : 'warning'}
+                              className="font-mono text-[0.6rem] px-1.5"
+                            >
+                              {consultBill.status === 'PAID' ? 'PAID' : 'PENDING'}
+                            </Badge>
+                          </div>
+                        )}
+                        {pharmacyBills.map((pb) => (
+                          <div key={pb.id} className="flex items-center gap-1.5 font-mono text-[0.68rem]">
+                            <span className="text-muted-foreground">Pharmacy:</span>
+                            <span className="font-bold text-foreground">
+                              ${pb.totalAmount.toFixed(2)}
+                            </span>
+                            <Badge
+                              variant={pb.status === 'PAID' ? 'success' : 'warning'}
+                              className="font-mono text-[0.6rem] px-1.5"
+                            >
+                              {pb.status === 'PAID' ? 'PAID' : 'PENDING'}
+                            </Badge>
+                          </div>
+                        ))}
                       </div>
                     ) : (
                       <div className="text-muted-foreground text-xs font-mono">
@@ -377,14 +428,16 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
                         <span>Case</span>
                       </Button>
 
-                      {hasOutstanding && (
+                      {role !== 'DOCTOR' && firstPendingBill && (
                         <Button
                           size="sm"
-                          onClick={() => openPaymentModal(item)}
-                          title="Pay / Settle Outstanding Bill"
+                          onClick={() => openPaymentModal(item, firstPendingBill)}
+                          title={`Pay ${firstPendingBill.invoiceNumber}`}
                         >
                           <CreditCard size={12} />
-                          <span>Pay</span>
+                          <span>
+                            {firstPendingBill.billType === 'PHARMACY' ? 'Pay Pharmacy' : 'Pay Fee'}
+                          </span>
                         </Button>
                       )}
                     </div>
@@ -427,7 +480,7 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
             </div>
 
             {/* Patient & Doctor details */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="p-3 bg-muted/30 rounded-lg border border-border">
                 <div className="text-[0.68rem] text-muted-foreground uppercase font-medium mb-1">Patient Details</div>
                 <div className="text-sm font-bold text-foreground">
@@ -468,7 +521,7 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
               </div>
               <div className="text-foreground">{selectedCase.reason || 'Routine consultation'}</div>
               {selectedCase.medicalRecord?.vitals && (
-                <div className="mt-2 pt-2 border-t border-border grid grid-cols-4 gap-2 font-mono text-[0.68rem]">
+                <div className="mt-2 pt-2 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[0.68rem]">
                   <div>
                     <span className="text-muted-foreground">BP: </span>
                     <span className="text-foreground font-semibold">{selectedCase.medicalRecord.vitals.bloodPressure || 'N/A'}</span>
@@ -525,6 +578,15 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
                           </div>
                         ))}
                       </div>
+                      {rx.labTests && rx.labTests.length > 0 && (
+                        <div className="mt-2 pt-1.5 border-t border-border/60 flex flex-wrap gap-1">
+                          {rx.labTests.map((t, idx) => (
+                            <Badge key={idx} variant="outline" className="font-mono text-[0.65rem]">
+                              Lab: {t.testName}{t.urgency ? ` (${t.urgency})` : ''}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                       {rx.doctorNotes && (
                         <div className="mt-1.5 text-muted-foreground italic text-[0.68rem]">
                           Doctor Remarks: {rx.doctorNotes}
@@ -538,50 +600,56 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
               )}
             </div>
 
-            {/* Billing Breakdown */}
-            <div className="p-3 bg-muted/30 rounded-lg border border-border">
-              <div className="text-[0.68rem] text-muted-foreground uppercase font-medium mb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Receipt size={13} className="text-primary" /> Hospital Billing & Money Paid
-                </span>
-                {selectedCase.billing && (
-                  <Badge variant="outline" className="font-mono">
-                    {selectedCase.billing.invoiceNumber}
-                  </Badge>
-                )}
-              </div>
-              {selectedCase.billing ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between font-mono text-muted-foreground">
-                    <span>Subtotal Charges:</span>
-                    <span>${selectedCase.billing.subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between font-mono text-muted-foreground">
-                    <span>Tax & Clinical Fees:</span>
-                    <span>${selectedCase.billing.taxAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between font-mono text-foreground font-bold text-sm pt-1 border-t border-border">
-                    <span>Total Invoiced:</span>
-                    <span>${selectedCase.billing.totalAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between font-mono text-foreground text-sm">
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <DollarSign size={13} className="text-emerald-400" /> Paid Amount:
-                    </span>
-                    <span className="font-bold text-emerald-400">
-                      ${(selectedCase.billing.paidAmount || 0).toFixed(2)} ({selectedCase.billing.status})
-                    </span>
-                  </div>
-                  {selectedCase.billing.paidAt && (
-                    <div className="text-muted-foreground font-mono text-[0.65rem] text-right">
-                      Settled on: {new Date(selectedCase.billing.paidAt).toLocaleString()} ({selectedCase.billing.paymentMethod})
-                    </div>
-                  )}
+            {/* Two-Stage Billing Breakdown */}
+            {role !== 'DOCTOR' && (
+              <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                <div className="text-[0.68rem] text-muted-foreground uppercase font-medium mb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Receipt size={13} className="text-primary" /> Two-Stage Billing (Consultation Fee vs Pharmacy Dues)
+                  </span>
                 </div>
-              ) : (
-                <div className="text-muted-foreground italic py-2">No invoice billed for this case yet</div>
-              )}
-            </div>
+                {(() => {
+                  const { consultBill, pharmacyBills } = getCaseBills(selectedCase);
+                  if (!consultBill && pharmacyBills.length === 0) {
+                    return <div className="text-muted-foreground italic py-2">No invoices billed for this case yet</div>;
+                  }
+                  return (
+                    <div className="space-y-2 font-mono text-xs">
+                      {consultBill && (
+                        <div className="p-2.5 rounded border border-border bg-card flex items-center justify-between gap-2">
+                          <div>
+                            <div className="font-bold text-foreground">
+                              Stage 1 • Consultation Fee ({consultBill.invoiceNumber})
+                            </div>
+                            <div className="text-[0.65rem] text-muted-foreground">
+                              Paid ${(consultBill.paidAmount || 0).toFixed(2)} / ${consultBill.totalAmount.toFixed(2)}
+                            </div>
+                          </div>
+                          <Badge variant={consultBill.status === 'PAID' ? 'success' : 'warning'}>
+                            {consultBill.status === 'PAID' ? 'PAID' : 'PENDING'}
+                          </Badge>
+                        </div>
+                      )}
+                      {pharmacyBills.map((pb) => (
+                        <div key={pb.id} className="p-2.5 rounded border border-border bg-card flex items-center justify-between gap-2">
+                          <div>
+                            <div className="font-bold text-foreground">
+                              Stage 2 • Pharmacy Bill ({pb.invoiceNumber})
+                            </div>
+                            <div className="text-[0.65rem] text-muted-foreground">
+                              Paid ${(pb.paidAmount || 0).toFixed(2)} / ${pb.totalAmount.toFixed(2)}
+                            </div>
+                          </div>
+                          <Badge variant={pb.status === 'PAID' ? 'success' : 'warning'}>
+                            {pb.status === 'PAID' ? 'PAID' : 'PENDING'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
 
             <div className="flex justify-end pt-2">
               <Button variant="outline" onClick={() => setSelectedCase(null)}>

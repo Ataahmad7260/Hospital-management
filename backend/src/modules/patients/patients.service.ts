@@ -1,19 +1,42 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Optional,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { BillingService } from '../billing/billing.service';
 import { Role } from '../../common/enums/role.enum';
-import { AppointmentStatus, Gender, BloodGroup, Role as PrismaRole } from '@prisma/client';
+import {
+  AppointmentStatus,
+  Gender,
+  BloodGroup,
+  PaymentMethod,
+  Role as PrismaRole,
+} from '@prisma/client';
 import { AdmitPatientDto } from './dto/admit-patient.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class PatientsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly billingService?: BillingService,
+  ) {}
 
   /**
    * Admin / Staff / Patient Admission:
-   * Write patient name, enter condition, and admit immediately to a doctor.
+   * Strictly enforces upfront consultation fee settlement (paymentStatus: 'PAID')
+   * BEFORE creating/saving the patient record or booking the doctor queue slot.
    */
-  async admitPatient(dto: AdmitPatientDto, currentUser?: any) {
+  async admitPatient(dto: AdmitPatientDto, _currentUser?: any) {
+    if (String(dto.paymentStatus || '').toUpperCase() !== 'PAID') {
+      throw new BadRequestException(
+        'Consultation fee must be paid before admitting patient and routing to doctor queue',
+      );
+    }
+
     const doctor = await this.prisma.doctorProfile.findUnique({
       where: { id: dto.doctorId },
       include: { user: true },
@@ -21,6 +44,16 @@ export class PatientsService {
 
     if (!doctor) {
       throw new NotFoundException(`Attending doctor with ID ${dto.doctorId} not found`);
+    }
+
+    const requiredFee = Math.max(0, Number(doctor.consultationFee ?? 0));
+    if (
+      dto.paidAmount !== undefined &&
+      Number(dto.paidAmount) + 0.005 < requiredFee
+    ) {
+      throw new BadRequestException(
+        'Consultation fee must be paid before admitting patient and routing to doctor queue',
+      );
     }
 
     // Determine or generate user email
@@ -129,9 +162,26 @@ export class PatientsService {
       // Non-fatal
     }
 
+    const consultationBill = this.billingService
+      ? await this.billingService.createConsultationBookingBill({
+          appointmentId: appointment.id,
+          patientId: patientProfile.id,
+          doctorId: doctor.id,
+          payUpfront: true,
+          paymentMethod: dto.paymentMethod ?? PaymentMethod.CARD,
+        })
+      : null;
+
     return {
-      message: 'Patient admitted successfully and routed to doctor consultation queue',
-      admission: appointment,
+      message:
+        'Consultation fee paid; patient admitted successfully and routed to doctor consultation queue',
+      admission: {
+        ...appointment,
+        consultationFeePaid: true,
+        consultationBill,
+        bill: consultationBill,
+      },
+      consultationBill,
     };
   }
 
@@ -179,18 +229,28 @@ export class PatientsService {
           },
         },
         medicalRecord: true,
-        bill: true,
+        bills: { orderBy: { createdAt: 'desc' } },
       },
       orderBy: { appointmentDate: 'desc' },
     });
 
+    const isDoctor = user?.role === Role.DOCTOR;
+
     return appointments.map((apt) => {
-      // Find bills associated with this appointment or patient
-      const bill = apt.bill || apt.patient.bills[0] || null;
-      // Find prescriptions conducted by this doctor for this patient
-      const prescriptions = apt.patient.prescriptions.filter(
-        (rx) => rx.doctorId === apt.doctorId,
-      );
+      // Find bills associated with this appointment or patient (prefer consultation/active bill for summary)
+      const aptBills = apt.bills || [];
+      const consultationBill =
+        aptBills.find((b) => b.billType === 'CONSULTATION') || null;
+      const pharmacyBills = aptBills.filter((b) => b.billType === 'PHARMACY');
+      const bill = consultationBill || aptBills[0] || apt.patient.bills[0] || null;
+      // Find prescriptions explicitly linked to this consultation or legacy unlinked for same doctor
+      const directPrescriptions = apt.patient.prescriptions.filter((rx) => rx.appointmentId === apt.id);
+      const prescriptions =
+        directPrescriptions.length > 0
+          ? directPrescriptions
+          : apt.patient.prescriptions.filter(
+              (rx) => !rx.appointmentId && rx.doctorId === apt.doctorId,
+            );
 
       return {
         id: apt.id,
@@ -198,19 +258,20 @@ export class PatientsService {
         timeSlot: apt.timeSlot,
         status: apt.status,
         reason: apt.reason,
+        doctorNotes: apt.doctorNotes,
         patient: {
           id: apt.patient.id,
-          firstName: apt.patient.user.firstName,
-          lastName: apt.patient.user.lastName,
-          email: apt.patient.user.email,
-          phoneNumber: apt.patient.user.phoneNumber,
+          firstName: apt.patient.user?.firstName || 'Unknown',
+          lastName: apt.patient.user?.lastName || 'Patient',
+          email: apt.patient.user?.email || '',
+          phoneNumber: apt.patient.user?.phoneNumber || '',
           gender: apt.patient.gender,
           bloodGroup: apt.patient.bloodGroup,
         },
         attendingDoctor: {
           id: apt.doctor.id,
-          firstName: apt.doctor.user.firstName,
-          lastName: apt.doctor.user.lastName,
+          firstName: apt.doctor.user?.firstName || 'Dr.',
+          lastName: apt.doctor.user?.lastName || 'Doctor',
           specialization: apt.doctor.specialization,
           department: apt.doctor.department?.name || 'General Medicine',
           consultationFee: apt.doctor.consultationFee,
@@ -226,26 +287,33 @@ export class PatientsService {
         prescriptions: prescriptions.map((rx) => ({
           id: rx.id,
           prescriptionNo: rx.prescriptionNo,
+          appointmentId: rx.appointmentId,
           status: rx.status,
+          isFinalized: rx.isFinalized,
           doctorNotes: rx.doctorNotes,
           createdAt: rx.createdAt,
           items: rx.items,
+          labTests: rx.labTests || [],
           dispensedLogs: rx.dispensedLogs,
         })),
-        billing: bill
-          ? {
-              id: bill.id,
-              invoiceNumber: bill.invoiceNumber,
-              totalAmount: bill.totalAmount,
-              paidAmount: bill.paidAmount,
-              subtotal: bill.subtotal,
-              taxAmount: bill.taxAmount,
-              status: bill.status,
-              paymentMethod: bill.paymentMethod,
-              paidAt: bill.paidAt,
-              items: bill.items,
-            }
-          : null,
+        billing:
+          !isDoctor && bill
+            ? {
+                id: bill.id,
+                invoiceNumber: bill.invoiceNumber,
+                billType: bill.billType,
+                totalAmount: bill.totalAmount,
+                paidAmount: bill.paidAmount,
+                subtotal: bill.subtotal,
+                taxAmount: bill.taxAmount,
+                status: bill.status,
+                paymentMethod: bill.paymentMethod,
+                paidAt: bill.paidAt,
+                items: bill.items,
+              }
+            : null,
+        consultationBill: isDoctor ? null : consultationBill,
+        pharmacyBills: isDoctor ? [] : pharmacyBills,
       };
     });
   }
@@ -293,7 +361,7 @@ export class PatientsService {
 
     for (const apt of appointments) {
       const iso = new Date(apt.appointmentDate).toISOString().split('T')[0];
-      const patientName = `${apt.patient.user.firstName} ${apt.patient.user.lastName}`;
+      const patientName = `${apt.patient.user?.firstName || 'Patient'} ${apt.patient.user?.lastName || ''}`.trim();
       if (!dailyMap[iso]) {
         const d = new Date(apt.appointmentDate);
         dailyMap[iso] = {
@@ -407,8 +475,17 @@ export class PatientsService {
                 user: { select: { firstName: true, lastName: true } },
               },
             },
+            prescriptions: {
+              orderBy: { createdAt: 'desc' },
+            },
+            medicalReports: {
+              orderBy: { createdAt: 'desc' },
+            },
           },
           orderBy: { appointmentDate: 'desc' },
+        },
+        uploadedReports: {
+          orderBy: { createdAt: 'desc' },
         },
         prescriptions: {
           include: {

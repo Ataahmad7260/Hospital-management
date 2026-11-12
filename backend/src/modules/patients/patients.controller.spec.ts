@@ -1,8 +1,9 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PatientsController } from './patients.controller.js';
 import { PatientsService } from './patients.service.js';
+import { BillingService } from '../billing/billing.service.js';
 import { Role } from '../../common/enums/role.enum.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
@@ -20,6 +21,10 @@ describe('PatientsController & Service Authorization', () => {
     },
   };
 
+  const mockBillingService = {
+    createConsultationBookingBill: jest.fn() as any,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PatientsController],
@@ -28,6 +33,10 @@ describe('PatientsController & Service Authorization', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: BillingService,
+          useValue: mockBillingService,
         },
       ],
     }).compile();
@@ -165,6 +174,27 @@ describe('PatientsController & Service Authorization', () => {
       await expect(
         controller.findOne('patient-profile-1', { id: 'doctor-user-999', role: Role.DOCTOR }),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('POST /patients/admit (admitPatient)', () => {
+    it('should reject unpaid admission with BadRequestException before calling service', async () => {
+      await expect(
+        controller.admitPatient(
+          {
+            firstName: 'Test',
+            lastName: 'Patient',
+            doctorId: 'doc-1',
+            reason: 'Chest pain',
+            paymentStatus: 'PENDING',
+          },
+          { id: 'admin-1', role: Role.ADMIN },
+        ),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Consultation fee must be paid before admitting patient and routing to doctor queue',
+        ),
+      );
     });
   });
 });

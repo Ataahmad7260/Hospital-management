@@ -2,11 +2,11 @@ import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/co
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PrescriptionsService } from './prescriptions.service';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto';
+import { DispensePrescriptionDto } from './dto/dispense-prescription.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
-
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Prescriptions')
@@ -16,11 +16,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class PrescriptionsController {
   constructor(private readonly prescriptionsService: PrescriptionsService) {}
 
-  @Roles(Role.DOCTOR)
+  @Roles(Role.DOCTOR, Role.ADMIN)
   @Post()
-  @ApiOperation({ summary: 'Doctor only: Issue digital prescription with medications' })
-  async create(@Body() dto: CreatePrescriptionDto) {
-    return this.prescriptionsService.create(dto);
+  @ApiOperation({ summary: 'Doctor only: Issue digital prescription with medications and lab/diagnostic tests' })
+  async create(@Body() dto: CreatePrescriptionDto, @CurrentUser() user: any) {
+    return this.prescriptionsService.create(dto, user);
   }
 
   @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
@@ -32,13 +32,14 @@ export class PrescriptionsController {
 
   @Roles(Role.PHARMACIST)
   @Patch(':id/dispense')
-  @ApiOperation({ summary: 'Pharmacist only: Dispense medicines and update fulfillment status' })
+  @ApiOperation({
+    summary: 'Pharmacist only: Hand over / dispense medicines (enforces settled Stage 2 Pharmacy Bill)',
+  })
   async dispense(
     @Param('id') id: string,
-    @Body('pharmacistId') pharmacistId: string,
-    @Body('itemsDispensed') itemsDispensed: string[],
-    @Body('notes') notes?: string,
+    @Body() dto: DispensePrescriptionDto,
+    @CurrentUser() user: any,
   ) {
-    return this.prescriptionsService.dispense(id, pharmacistId, itemsDispensed, notes);
+    return this.prescriptionsService.dispense(id, dto, user);
   }
 }

@@ -14,34 +14,44 @@ import { Role } from '../../common/enums/role.enum';
 export class PharmacyController {
   constructor(private readonly pharmacyService: PharmacyService) {}
 
-  @Roles(Role.ADMIN, Role.PHARMACIST)
+  @Roles(Role.PHARMACIST)
   @Post('medicines')
-  @ApiOperation({ summary: 'Pharmacist/Admin: Add new medicine to inventory' })
+  @ApiOperation({ summary: 'Pharmacist only: Add new medicine to inventory' })
   async createMedicine(@Body() dto: CreateMedicineDto) {
     return this.pharmacyService.createMedicine(dto);
   }
 
-  @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST)
+  @Roles(Role.PHARMACIST, Role.DOCTOR)
   @Get('medicines')
-  @ApiOperation({ summary: 'List all medicines and inventory stocks' })
+  @ApiOperation({ summary: 'Pharmacist & Doctor: List all medicines and inventory stocks' })
   async findAll() {
     return this.pharmacyService.findAll();
   }
 
-  @Roles(Role.ADMIN, Role.PHARMACIST)
+  @Roles(Role.PHARMACIST)
   @Get('medicines/low-stock')
-  @ApiOperation({ summary: 'Pharmacist/Admin: Check low stock alerts' })
+  @ApiOperation({ summary: 'Pharmacist only: Check low stock alerts' })
   async findLowStock() {
     return this.pharmacyService.findLowStock();
   }
 
-  @Roles(Role.ADMIN, Role.PHARMACIST)
+  @Roles(Role.PHARMACIST)
   @Patch('medicines/:id/stock')
-  @ApiOperation({ summary: 'Adjust medicine stock quantity' })
+  @ApiOperation({ summary: 'Pharmacist only: Adjust medicine stock quantity' })
   async updateStock(
     @Param('id') id: string,
     @Body('quantityDelta') quantityDelta: number,
   ) {
     return this.pharmacyService.updateStock(id, quantityDelta);
+  }
+
+  @Roles(Role.PHARMACIST)
+  @Get('sales-ledger')
+  @ApiOperation({
+    summary:
+      'Pharmacist only: Comprehensive Sales & Revenue Ledger with medicine breakdown, itemized payments, last 30 days & overall totals',
+  })
+  async getSalesLedger() {
+    return this.pharmacyService.getSalesLedger();
   }
 }

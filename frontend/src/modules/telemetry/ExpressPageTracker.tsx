@@ -74,7 +74,7 @@ export const ExpressPageTracker: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       {/* Header and Telemetry Intro */}
       <div className="bg-card border border-border rounded-xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
@@ -153,9 +153,9 @@ export const ExpressPageTracker: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* Top Visited Pages List */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           <Card
             title="Page Traffic & Access Breakdown"
             subtitle="Hit frequencies per page route"
@@ -241,7 +241,7 @@ export const ExpressPageTracker: React.FC = () => {
         </div>
 
         {/* Sidebar Panel: Test Hit & Telemetry Controls */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           <Card
             title="Simulate Page Hit"
             subtitle="Trigger an Express page track request"

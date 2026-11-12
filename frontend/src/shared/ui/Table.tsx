@@ -6,7 +6,12 @@ export const Table: React.FC<{ children: React.ReactNode; className?: string }> 
   className = '',
 }) => {
   return (
-    <div className={cn('relative w-full overflow-auto rounded-xl border border-border bg-card shadow-sm', className)}>
+    <div
+      className={cn(
+        'relative w-full max-w-full min-w-0 overflow-x-auto overflow-y-hidden scrollbar-hidden rounded-xl border border-border bg-card shadow-sm',
+        className
+      )}
+    >
       <table className="w-full text-left text-sm border-collapse">{children}</table>
     </div>
   );

@@ -33,9 +33,19 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
 
   // Global Cross-Origin Resource Sharing (CORS)
+  const rawCorsOrigin = configService.get<string>('CORS_ORIGIN')?.trim();
+  const corsOrigin =
+    rawCorsOrigin && rawCorsOrigin !== '*'
+      ? rawCorsOrigin
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean)
+      : true;
+
   app.enableCors({
-    origin: '*',
+    origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
     credentials: true,
   });
 
@@ -76,6 +86,7 @@ async function bootstrap() {
     .addTag('Health', 'Core system & MongoDB rs0 diagnostic endpoints')
     .addTag('Auth', 'Authentication, registration & JWT session tokens')
     .addTag('Users', 'Staff management & user role activation')
+    .addTag('Hospital Staff', 'Admin hospital staff roster: Nurses, Ward Boys, Ward Girls, Technicians & Support')
     .addTag('Doctors', 'Specialist directory & consultations')
     .addTag('Patients', 'Patient admissions, clinical files, and case overview')
     .addTag('Appointments', 'Consultations booking and scheduling queue')
@@ -103,6 +114,7 @@ async function bootstrap() {
 
   const httpAdapter = app.getHttpAdapter();
   const expressInstance = httpAdapter.getInstance();
+  expressInstance.set('trust proxy', 1);
 
   // Root documentation endpoint (/api/docs)
   expressInstance.get('/api/docs', (req: any, res: any) => {

@@ -84,9 +84,9 @@ export const DoctorDashboard: React.FC<{ onNavigateToPrescriptions?: () => void 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
         <Card className="hover:border-primary/50 transition-all duration-300 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-primary/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -164,7 +164,7 @@ export const DoctorDashboard: React.FC<{ onNavigateToPrescriptions?: () => void 
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         {/* Today's Schedule */}
         <Card className="hover:border-primary/50 transition-all duration-300">
           <CardHeader className="pb-3 border-b border-border/60 flex flex-row items-center justify-between">
@@ -321,6 +321,11 @@ export const DoctorDashboard: React.FC<{ onNavigateToPrescriptions?: () => void 
                       <div className="text-xs text-foreground font-medium mt-1">
                         {rx.items?.map((i) => `${i.medicineName} (${i.dosage})`).join(', ')}
                       </div>
+                      {rx.labTests && rx.labTests.length > 0 && (
+                        <div className="text-[0.68rem] font-mono text-muted-foreground mt-0.5">
+                          Labs: {rx.labTests.map((t) => t.testName).join(', ')}
+                        </div>
+                      )}
                     </div>
                     <div>{getStatusBadge(rx.status)}</div>
                   </div>

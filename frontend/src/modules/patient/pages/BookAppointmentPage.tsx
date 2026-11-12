@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, Plus, Clock, Stethoscope, CalendarX } from 'lucide-react';
+import { Calendar, Plus, Clock, Stethoscope, CalendarX, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ export const BookAppointmentPage: React.FC = () => {
   const [myProfile, setMyProfile] = useState<Patient | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [settlingId, setSettlingId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     doctorId: '',
@@ -24,6 +25,8 @@ export const BookAppointmentPage: React.FC = () => {
     appointmentDate: new Date().toISOString().split('T')[0],
     timeSlot: '09:30 - 10:00 AM',
     reason: '',
+    payUpfront: true,
+    paymentMethod: 'CARD' as 'CARD' | 'UPI' | 'ONLINE' | 'CASH',
   });
 
   useEffect(() => {
@@ -63,8 +66,20 @@ export const BookAppointmentPage: React.FC = () => {
     }
 
     try {
-      await api.createAppointment(form);
-      showToast('Appointment successfully scheduled!');
+      const created = await api.createAppointment({
+        doctorId: form.doctorId,
+        patientId: form.patientId,
+        appointmentDate: form.appointmentDate,
+        timeSlot: form.timeSlot,
+        reason: form.reason,
+        payUpfront: form.payUpfront,
+        paymentMethod: form.paymentMethod,
+      });
+      if (created.status === 'CONFIRMED') {
+        showToast('Consultation fee paid & appointment CONFIRMED!');
+      } else {
+        showToast('Appointment created as PENDING. Settle the Consultation Fee to confirm.');
+      }
       setIsModalOpen(false);
       setForm((prev) => ({ ...prev, reason: '' }));
       loadData();
@@ -72,6 +87,30 @@ export const BookAppointmentPage: React.FC = () => {
       showToast(err.message, true);
     }
   };
+
+  const handlePayToConfirm = async (apt: Appointment) => {
+    const consultBill = apt.consultationBill || apt.bill;
+    if (!consultBill) {
+      showToast('Consultation bill not found. Open Billing page to settle.', true);
+      return;
+    }
+    setSettlingId(apt.id);
+    try {
+      const remaining = Math.max(
+        0.01,
+        Number((consultBill.totalAmount - (consultBill.paidAmount || 0)).toFixed(2)),
+      );
+      await api.recordPayment(consultBill.id, remaining, 'CARD');
+      showToast('Consultation fee paid — appointment is now CONFIRMED!');
+      loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Payment failed', true);
+    } finally {
+      setSettlingId(null);
+    }
+  };
+
+  const selectedDoctorObj = doctors.find((d) => d.id === form.doctorId) || null;
 
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
@@ -108,7 +147,7 @@ export const BookAppointmentPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       <Card className="hover:border-primary/50 transition-all duration-300">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/60">
           <div className="flex items-start gap-3">
@@ -163,56 +202,89 @@ export const BookAppointmentPage: React.FC = () => {
                   <TableHead className="font-semibold text-muted-foreground">Physician</TableHead>
                   <TableHead className="font-semibold text-muted-foreground">Specialization</TableHead>
                   <TableHead className="font-semibold text-muted-foreground">Reason for Visit</TableHead>
-                  <TableHead className="font-semibold text-muted-foreground text-right">Status</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground">Consultation Fee</TableHead>
+                  <TableHead className="font-semibold text-muted-foreground text-right">Status & Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {appointments.map((apt) => (
-                  <TableRow
-                    key={apt.id}
-                    className="border-b border-border/60 hover:bg-muted/40 transition-colors"
-                  >
-                    <TableCell className="py-3.5">
-                      <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-primary shrink-0" />
-                        <div>
-                          <div className="font-semibold text-foreground text-xs">{apt.timeSlot}</div>
-                          <div className="font-mono text-[0.68rem] text-muted-foreground">
-                            {new Date(apt.appointmentDate).toLocaleDateString(undefined, {
-                              weekday: 'short',
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
+                {appointments.map((apt) => {
+                  const consultBill = apt.consultationBill || apt.bill || null;
+                  const isFeePaid = apt.consultationFeePaid ?? (consultBill?.status === 'PAID');
+                  const feeAmount =
+                    consultBill?.totalAmount ?? apt.doctor?.consultationFee ?? 0;
+
+                  return (
+                    <TableRow
+                      key={apt.id}
+                      className="border-b border-border/60 hover:bg-muted/40 transition-colors"
+                    >
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className="text-primary shrink-0" />
+                          <div>
+                            <div className="font-semibold text-foreground text-xs">{apt.timeSlot}</div>
+                            <div className="font-mono text-[0.68rem] text-muted-foreground">
+                              {new Date(apt.appointmentDate).toLocaleDateString(undefined, {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-[0.68rem] text-foreground shrink-0">
-                          <Stethoscope size={13} className="text-primary" />
+                      </TableCell>
+                      <TableCell className="py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center font-bold text-[0.68rem] text-foreground shrink-0">
+                            <Stethoscope size={13} className="text-primary" />
+                          </div>
+                          <div className="font-medium text-xs text-foreground">
+                            {apt.doctor?.user
+                              ? `Dr. ${apt.doctor.user.firstName} ${apt.doctor.user.lastName}`
+                              : 'Hospital Physician'}
+                          </div>
                         </div>
-                        <div className="font-medium text-xs text-foreground">
-                          {apt.doctor?.user
-                            ? `Dr. ${apt.doctor.user.firstName} ${apt.doctor.user.lastName}`
-                            : 'Hospital Physician'}
+                      </TableCell>
+                      <TableCell className="py-3.5 text-xs text-muted-foreground">
+                        <Badge variant="outline" className="font-normal text-[0.68rem]">
+                          {apt.doctor?.specialization || 'Clinical Medicine'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3.5 text-xs text-foreground">
+                        {apt.reason || 'General Consultation & Examination'}
+                      </TableCell>
+                      <TableCell className="py-3.5 text-xs font-mono">
+                        <div className="font-semibold text-foreground">${feeAmount.toFixed(2)}</div>
+                        <Badge
+                          variant={isFeePaid ? 'success' : 'warning'}
+                          className="mt-1 gap-1 uppercase font-mono text-[0.62rem]"
+                        >
+                          {isFeePaid && <CheckCircle2 size={10} />}
+                          {isFeePaid ? 'PAID' : 'PENDING'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {getStatusBadge(apt.status)}
+                          {apt.status === 'PENDING' && !isFeePaid && consultBill && (
+                            <Button
+                              size="sm"
+                              disabled={settlingId === apt.id}
+                              onClick={() => handlePayToConfirm(apt)}
+                              className="h-7 px-2.5 text-xs gap-1 cursor-pointer"
+                            >
+                              <CreditCard size={12} />
+                              <span>
+                                {settlingId === apt.id ? 'Paying...' : 'Pay & Confirm'}
+                              </span>
+                            </Button>
+                          )}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3.5 text-xs text-muted-foreground">
-                      <Badge variant="outline" className="font-normal text-[0.68rem]">
-                        {apt.doctor?.specialization || 'Clinical Medicine'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="py-3.5 text-xs text-foreground">
-                      {apt.reason || 'General Consultation & Examination'}
-                    </TableCell>
-                    <TableCell className="py-3.5 text-right">
-                      {getStatusBadge(apt.status)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -295,12 +367,57 @@ export const BookAppointmentPage: React.FC = () => {
             />
           </FormGroup>
 
+          <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2 text-xs">
+            <div className="flex items-center justify-between font-mono">
+              <span className="text-muted-foreground uppercase text-[0.68rem] font-semibold">
+                Stage 1 • Consultation Booking Payment
+              </span>
+              <span className="font-bold text-emerald-400">
+                ${selectedDoctorObj ? selectedDoctorObj.consultationFee.toFixed(2) : '0.00'}
+              </span>
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="bookUpfrontMode"
+                checked={form.payUpfront}
+                onChange={() => setForm({ ...form, payUpfront: true })}
+              />
+              <span>Pay Consultation Fee Now & Confirm Immediately</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="bookUpfrontMode"
+                checked={!form.payUpfront}
+                onChange={() => setForm({ ...form, payUpfront: false })}
+              />
+              <span>Book as PENDING (pay later before confirmation)</span>
+            </label>
+
+            {form.payUpfront && (
+              <select
+                value={form.paymentMethod}
+                onChange={(e) => setForm({ ...form, paymentMethod: e.target.value as any })}
+                className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-mono"
+              >
+                <option value="CARD">Debit / Credit Card</option>
+                <option value="UPI">UPI Digital Payment</option>
+                <option value="ONLINE">Online Portal Gateway</option>
+                <option value="CASH">Cash at Desk</option>
+              </select>
+            )}
+          </div>
+
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
             <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
             <Button type="submit">
-              Confirm Consultation
+              {form.payUpfront && selectedDoctorObj
+                ? `Pay $${selectedDoctorObj.consultationFee.toFixed(2)} & Confirm`
+                : 'Book as Pending'}
             </Button>
           </div>
         </form>

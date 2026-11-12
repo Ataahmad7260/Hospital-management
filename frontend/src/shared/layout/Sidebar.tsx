@@ -1,9 +1,9 @@
-import React from 'react';
 import {
   Activity,
   LayoutDashboard,
   TrendingUp,
   UserPlus,
+  Users,
   FileText,
   Stethoscope,
   Pill,
@@ -14,11 +14,23 @@ import {
   ChevronRight,
   LogOut,
   Sparkles,
-  Calendar,
   CreditCard,
 } from 'lucide-react';
 import type { Role } from '../types';
 import { useAuth } from '../context/AuthContext';
+
+export interface NavItem {
+  id: string;
+  label: string;
+  sublabel: string;
+  icon: React.ReactNode;
+  highlight?: boolean;
+}
+
+export interface NavGroup {
+  groupTitle: string;
+  items: NavItem[];
+}
 
 interface Props {
   activeView: string;
@@ -35,106 +47,175 @@ export const Sidebar: React.FC<Props> = ({
   onToggleCollapse,
   isDbOnline,
 }) => {
-  const { currentUser, role, switchRole, logout } = useAuth();
+  const { currentUser, role, logout } = useAuth();
 
-  const navGroups = [
-    {
-      groupTitle: 'Overview & Graph',
-      items: [
+  // Strict Role-Based Feature Visibility Navigation Groups
+  const getNavGroups = (): NavGroup[] => {
+    if (role === 'DOCTOR') {
+      return [
         {
-          id: 'dashboard',
-          label: 'Master Dashboard',
-          sublabel: 'Overview KPIs & Telemetry',
-          icon: <LayoutDashboard size={17} />,
+          groupTitle: 'Doctor Clinical Workspace',
+          items: [
+            {
+              id: 'doctor/dashboard',
+              label: "Today's Registered Patients",
+              sublabel: 'Real-time consultation queue',
+              icon: <Stethoscope size={17} />,
+            },
+            {
+              id: 'doctor/prescriptions',
+              label: 'Prescription Writer',
+              sublabel: 'Write, sign & issue digital Rx',
+              icon: <FileText size={17} />,
+            },
+          ],
         },
-        {
-          id: 'daily-graph',
-          label: 'Daily Admissions Graph',
-          sublabel: 'Day-by-day patient intake',
-          icon: <TrendingUp size={17} />,
-        },
-      ],
-    },
-    {
-      groupTitle: 'Clinical Workflow & Portals',
-      items: [
-        {
-          id: 'patient-portal',
-          label: 'Patient Portal',
-          sublabel: 'Clinical metrics & flow',
-          icon: <LayoutDashboard size={17} />,
-          highlight: true,
-        },
-        {
-          id: 'admit-patient',
-          label: 'Admit New Patient',
-          sublabel: 'Write name & condition',
-          icon: <UserPlus size={17} />,
-        },
-        {
-          id: 'patient-overview',
-          label: 'Patient Overview Ledger',
-          sublabel: 'Entries by date, Rx, bill paid',
-          icon: <FileText size={17} />,
-        },
-        {
-          id: 'book-consultation',
-          label: 'Book Consultation',
-          sublabel: 'Appointments & Specialists',
-          icon: <Calendar size={17} />,
-        },
-        {
-          id: 'my-prescriptions',
-          label: 'My Prescriptions',
-          sublabel: 'Rx regimens & medications',
-          icon: <FileText size={17} />,
-        },
-        {
-          id: 'invoices-payments',
-          label: 'Invoices & Payments',
-          sublabel: 'Statements & settlements',
-          icon: <CreditCard size={17} />,
-        },
-        {
-          id: 'doctor-portal',
-          label: 'Doctor Portal',
-          sublabel: 'Check condition & prescribe',
-          icon: <Stethoscope size={17} />,
-        },
-        {
-          id: 'pharmacist-portal',
-          label: 'Pharmacist Portal',
-          sublabel: 'Make bill & payment option',
-          icon: <Pill size={17} />,
-        },
-        {
-          id: 'admin-portal',
-          label: 'Administrator Portal',
-          sublabel: 'Staff & hospital operations',
-          icon: <Shield size={17} />,
-        },
-      ],
-    },
-    {
-      groupTitle: 'Express & API Docs',
-      items: [
-        {
-          id: 'telemetry',
-          label: 'Express Page Tracker',
-          sublabel: 'Live route hit analytics',
-          icon: <Server size={17} />,
-        },
-        {
-          id: 'swagger',
-          label: 'Swagger API Docs',
-          sublabel: 'OpenAPI 3.0 UI (/swagger)',
-          icon: <BookOpen size={17} />,
-        },
-      ],
-    },
-  ];
+      ];
+    }
 
-  const roles: Role[] = ['ADMIN', 'DOCTOR', 'PHARMACIST', 'PATIENT'];
+    if (role === 'PATIENT') {
+      return [
+        {
+          groupTitle: 'Patient Health Portal',
+          items: [
+            {
+              id: 'patient/dashboard',
+              label: 'Available Doctors Today',
+              sublabel: 'Specialists scheduled today',
+              icon: <Stethoscope size={17} />,
+            },
+            {
+              id: 'patient/prescriptions',
+              label: 'My Prescriptions',
+              sublabel: 'Medications, dosages & regimens',
+              icon: <FileText size={17} />,
+            },
+            {
+              id: 'patient/billing',
+              label: 'Billing & Payment Status',
+              sublabel: 'Paid amount & balance dues',
+              icon: <CreditCard size={17} />,
+            },
+          ],
+        },
+      ];
+    }
+
+    if (role === 'PHARMACIST') {
+      return [
+        {
+          groupTitle: 'Pharmacy Dispensary Portal',
+          items: [
+            {
+              id: 'pharmacist/dashboard',
+              label: 'Pharmacy Overview',
+              sublabel: 'Dispensary queue & alerts',
+              icon: <LayoutDashboard size={17} />,
+            },
+            {
+              id: 'pharmacist/fulfillment',
+              label: 'Dispensary & Billing',
+              sublabel: 'Medicine billing & handover',
+              icon: <FileText size={17} />,
+            },
+            {
+              id: 'pharmacist/sales',
+              label: 'Sales & Revenue Ledger',
+              sublabel: 'Payment history & analytics',
+              icon: <TrendingUp size={17} />,
+            },
+            {
+              id: 'pharmacist/inventory',
+              label: 'Medicine Management',
+              sublabel: 'Add medicines & adjust stock',
+              icon: <Pill size={17} />,
+            },
+          ],
+        },
+      ];
+    }
+
+    // Full administrative management access for Administrator (no medicine formulary/management)
+    return [
+      {
+        groupTitle: 'Overview & Graph',
+        items: [
+          {
+            id: 'admin/dashboard',
+            label: 'Master Dashboard',
+            sublabel: 'Overview KPIs & Telemetry',
+            icon: <LayoutDashboard size={17} />,
+          },
+          {
+            id: 'daily-graph',
+            label: 'Daily Admissions Graph',
+            sublabel: 'Day-by-day patient intake',
+            icon: <TrendingUp size={17} />,
+          },
+        ],
+      },
+      {
+        groupTitle: 'Admin Oversight & Management',
+        items: [
+          {
+            id: 'admin/doctors',
+            label: 'Doctors Management',
+            sublabel: 'Roster, fees & credentials',
+            icon: <Stethoscope size={17} />,
+          },
+          {
+            id: 'admin/patients',
+            label: 'Patients Registry',
+            sublabel: 'Master case ledger & records',
+            icon: <Users size={17} />,
+          },
+          {
+            id: 'admin/hospital-staff',
+            label: 'Hospital Staff',
+            sublabel: 'Nurses, ward boys, ward girls & support',
+            icon: <Users size={17} />,
+          },
+          {
+            id: 'admin/staff',
+            label: 'Staff & RBAC Directory',
+            sublabel: 'Hospital portal accounts & roles',
+            icon: <Shield size={17} />,
+          },
+          {
+            id: 'admin/financials',
+            label: 'Hospital Financials',
+            sublabel: 'Invoices, billing & revenue',
+            icon: <CreditCard size={17} />,
+          },
+          {
+            id: 'admit-patient',
+            label: 'Admit New Patient',
+            sublabel: 'Intake registration',
+            icon: <UserPlus size={17} />,
+          },
+        ],
+      },
+      {
+        groupTitle: 'Express & API Docs',
+        items: [
+          {
+            id: 'telemetry',
+            label: 'Express Page Tracker',
+            sublabel: 'Live route hit analytics',
+            icon: <Server size={17} />,
+          },
+          {
+            id: 'swagger',
+            label: 'Swagger API Docs',
+            sublabel: 'OpenAPI 3.0 UI (/swagger)',
+            icon: <BookOpen size={17} />,
+          },
+        ],
+      },
+    ];
+  };
+
+  const navGroups = getNavGroups();
 
   const getRoleBadgeClass = (r: Role) => {
     switch (r) {
@@ -195,39 +276,24 @@ export const Sidebar: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Role Switcher Widget */}
+      {/* Role Indicator / Switcher Widget (Interactive exclusively for Administrator) */}
       {!collapsed ? (
         <div className="p-3 border-b border-border bg-secondary/30">
-          <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground font-mono uppercase mb-2">
+          <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground font-mono uppercase">
             <span className="flex items-center gap-1 font-semibold text-foreground">
-              <Sparkles size={11} className="text-primary" /> Active Portal Scope
+              <Sparkles size={11} className="text-primary" /> Active Clearance
             </span>
             <span className={`font-bold px-2 py-0.5 rounded border text-[0.65rem] ${getRoleBadgeClass(role)}`}>
               {role}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
-            {roles.map((r) => {
-              const isSelected = role === r;
-              return (
-                <button
-                  key={r}
-                  onClick={() => switchRole(r)}
-                  className={`px-2 py-1.5 rounded-md text-[0.68rem] font-semibold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                    isSelected
-                      ? 'bg-primary text-primary-foreground border-primary shadow-xs font-bold'
-                      : 'bg-background/80 text-muted-foreground border-border hover:text-foreground hover:bg-secondary hover:border-border/80'
-                  }`}
-                >
-                  {r === 'ADMIN' && <Shield size={11} />}
-                  {r === 'DOCTOR' && <Stethoscope size={11} />}
-                  {r === 'PHARMACIST' && <Pill size={11} />}
-                  {r === 'PATIENT' && <UserPlus size={11} />}
-                  <span>{r}</span>
-                </button>
-              );
-            })}
-          </div>
+
+          {role === 'ADMIN' && (
+            <div className="mt-2 text-[0.62rem] text-muted-foreground font-mono flex items-center justify-between border-t border-border/60 pt-1.5">
+              <span>SECURITY SCOPE:</span>
+              <span className="font-bold text-foreground font-mono">ROOT ADMIN</span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="p-2 border-b border-border text-center">
@@ -238,7 +304,7 @@ export const Sidebar: React.FC<Props> = ({
       )}
 
       {/* Navigation Items List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-4">
         {navGroups.map((group, gIdx) => (
           <div key={gIdx}>
             {!collapsed && (
@@ -248,7 +314,17 @@ export const Sidebar: React.FC<Props> = ({
             )}
             <div className="space-y-1 mt-1">
               {group.items.map((item) => {
-                const isActive = activeView === item.id;
+                const cleanView = activeView.replace(/^\//, '');
+                const cleanItemId = item.id.replace(/^\//, '');
+                const isActive =
+                  cleanView === cleanItemId ||
+                  (cleanItemId === 'admin/dashboard' && (cleanView === 'dashboard' || cleanView === 'admin' || cleanView === 'admin-portal')) ||
+                  (cleanItemId === 'doctor/dashboard' && cleanView === 'doctor-portal') ||
+                  (cleanItemId === 'doctor/prescriptions' && cleanView === 'doctor-prescriptions') ||
+                  (cleanItemId === 'patient/dashboard' && cleanView === 'patient-portal') ||
+                  (cleanItemId === 'patient/prescriptions' && cleanView === 'my-prescriptions') ||
+                  (cleanItemId === 'patient/billing' && cleanView === 'invoices-payments') ||
+                  (cleanItemId === 'pharmacist/dashboard' && cleanView === 'pharmacist-portal');
 
                 return (
                   <button

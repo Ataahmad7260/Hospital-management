@@ -380,13 +380,25 @@ export function getPostmanHubHtml(baseUrl: string): string {
             <td><span class="method method-GET">GET</span></td>
             <td class="path">/api/v1/users</td>
             <td>ADMIN</td>
-            <td>List all registered hospital staff and patients</td>
+            <td>List hospital portal accounts (supports ?staffOnly=true filter)</td>
           </tr>
           <tr>
             <td><span class="method method-PATCH">PATCH</span></td>
             <td class="path">/api/v1/users/:id/status</td>
             <td>ADMIN</td>
             <td>Activate or deactivate a user account</td>
+          </tr>
+          <tr>
+            <td><span class="method method-GET">GET</span></td>
+            <td class="path">/api/v1/staff</td>
+            <td>ADMIN</td>
+            <td>List Hospital Staff (Nurses, Ward Boys, Ward Girls, Lab/OT Techs, Reception, Housekeeping, Security)</td>
+          </tr>
+          <tr>
+            <td><span class="method method-POST">POST</span></td>
+            <td class="path">/api/v1/staff</td>
+            <td>ADMIN</td>
+            <td>Admin only: Onboard new Hospital Staff member with role category, ward &amp; shift</td>
           </tr>
           <tr>
             <td><span class="method method-GET">GET</span></td>
@@ -439,20 +451,26 @@ export function getPostmanHubHtml(baseUrl: string): string {
           <tr>
             <td><span class="method method-GET">GET</span></td>
             <td class="path">/api/v1/pharmacy/medicines</td>
-            <td>ADMIN, DOCTOR, PHARMACIST</td>
+            <td>DOCTOR, PHARMACIST</td>
             <td>Browse pharmacy stock inventory and batch details</td>
           </tr>
           <tr>
             <td><span class="method method-POST">POST</span></td>
             <td class="path">/api/v1/pharmacy/medicines</td>
-            <td>ADMIN, PHARMACIST</td>
-            <td>Add a new medicine batch to pharmacy stock</td>
+            <td>PHARMACIST</td>
+            <td>Pharmacist only: Add a new medicine batch to pharmacy stock</td>
           </tr>
           <tr>
             <td><span class="method method-PATCH">PATCH</span></td>
             <td class="path">/api/v1/pharmacy/medicines/:id/stock</td>
-            <td>ADMIN, PHARMACIST</td>
-            <td>Adjust stock quantity for medicine item</td>
+            <td>PHARMACIST</td>
+            <td>Pharmacist only: Adjust stock quantity for medicine item</td>
+          </tr>
+          <tr>
+            <td><span class="method method-GET">GET</span></td>
+            <td class="path">/api/v1/pharmacy/sales-ledger</td>
+            <td>PHARMACIST</td>
+            <td>Pharmacist only: Detailed sales history, medicine revenue breakdown, and monthly/overall totals</td>
           </tr>
           <tr>
             <td><span class="method method-GET">GET</span></td>

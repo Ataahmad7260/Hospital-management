@@ -56,7 +56,7 @@ export const PatientPrescriptionsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       <Card className="hover:border-primary/50 transition-all duration-300">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/60">
           <div className="flex items-start gap-3">
@@ -135,6 +135,16 @@ export const PatientPrescriptionsPage: React.FC = () => {
                             )}
                           </div>
                         ))}
+                        {rx.labTests && rx.labTests.length > 0 && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {rx.labTests.map((t, idx) => (
+                              <Badge key={idx} variant="outline" className="text-[0.65rem] font-mono">
+                                Lab: {t.testName}
+                                {t.urgency && t.urgency !== 'Routine' ? ` (${t.urgency})` : ''}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5 font-mono text-[0.7rem] text-muted-foreground">

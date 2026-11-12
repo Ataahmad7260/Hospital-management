@@ -9,6 +9,8 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { MedicalReportsModule } from './modules/medical-reports/medical-reports.module';
+import { StaffModule } from './modules/staff/staff.module';
 import { PageTrackingModule } from './modules/page-tracking/page-tracking.module';
 import { PageTrackingMiddleware } from './modules/page-tracking/page-tracking.middleware';
 import { AppController } from './app.controller';
@@ -28,6 +30,8 @@ import { AppController } from './app.controller';
     PrescriptionsModule,
     PharmacyModule,
     BillingModule,
+    MedicalReportsModule,
+    StaffModule,
     PageTrackingModule,
   ],
   controllers: [AppController],

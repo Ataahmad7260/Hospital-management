@@ -11,7 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { PaymentMethod } from '@prisma/client';
+import { BillCategory, PaymentMethod } from '@prisma/client';
 
 export class BillItemDto {
   @ApiProperty({ example: 'General Consultation Fee', description: 'Itemized description' })
@@ -45,6 +45,16 @@ export class CreateBillDto {
   @IsString()
   @IsOptional()
   appointmentId?: string;
+
+  @ApiPropertyOptional({ example: '652f1b2c4f8d2b001a123460', description: 'Related prescription ObjectId (for Pharmacy bills)' })
+  @IsString()
+  @IsOptional()
+  prescriptionId?: string;
+
+  @ApiPropertyOptional({ enum: BillCategory, default: BillCategory.OTHER, description: 'Billing stage category' })
+  @IsEnum(BillCategory)
+  @IsOptional()
+  billType?: BillCategory = BillCategory.OTHER;
 
   @ApiProperty({ type: [BillItemDto], description: 'List of invoice line items' })
   @IsArray()

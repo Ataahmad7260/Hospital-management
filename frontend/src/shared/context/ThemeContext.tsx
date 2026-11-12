@@ -17,6 +17,9 @@ const ThemeContext = createContext<ThemeContextType>({
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
+      const params = new URLSearchParams(window.location.search);
+      const paramTheme = params.get('theme');
+      if (paramTheme === 'light' || paramTheme === 'dark') return paramTheme;
       const saved = localStorage.getItem('aura_theme');
       if (saved === 'light' || saved === 'dark') return saved;
     } catch {

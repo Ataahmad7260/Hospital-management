@@ -3,23 +3,24 @@ import { BookOpen, ExternalLink, ShieldCheck, Terminal, CheckCircle2 } from 'luc
 import { Card } from '../../shared/ui';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { API_ORIGIN } from '../../shared/api';
 
 export const SwaggerDocsView: React.FC = () => {
-  const swaggerUrl = 'http://localhost:4000/api/docs/swagger';
-  const postmanUrl = 'http://localhost:4000/api/docs';
+  const swaggerUrl = `${API_ORIGIN}/api/docs/swagger`;
+  const postmanUrl = `${API_ORIGIN}/api/docs`;
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       {/* Header */}
-      <div className="bg-card border border-border rounded-xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold">
+      <div className="bg-card border border-border rounded-xl p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center font-bold shrink-0">
             <BookOpen size={20} />
           </div>
-          <div>
-            <h1 className="text-base font-bold text-foreground flex items-center gap-2">
+          <div className="min-w-0">
+            <h1 className="text-base font-bold text-foreground flex flex-wrap items-center gap-2">
               Swagger OpenAPI 3.0 Interactive Documentation
-              <Badge variant="success">PORT 4000 LIVE</Badge>
+              <Badge variant="success">OPENAPI 3.0 LIVE</Badge>
             </h1>
             <p className="text-xs text-muted-foreground">
               Complete interactive API specification with live request testing, DTO validation schemas, and RBAC Bearer authorization
@@ -43,8 +44,8 @@ export const SwaggerDocsView: React.FC = () => {
       </div>
 
       {/* Quick Specs Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-0">
+        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs min-w-0">
           <div className="text-muted-foreground uppercase text-[0.68rem] flex items-center gap-1.5">
             <Terminal size={13} className="text-primary" />
             <span className="font-sans font-medium text-foreground">Interactive Endpoint</span>
@@ -53,7 +54,7 @@ export const SwaggerDocsView: React.FC = () => {
           <div className="text-muted-foreground text-[0.68rem] mt-0.5">Alternative route: /swagger</div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs">
+        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs min-w-0">
           <div className="text-muted-foreground uppercase text-[0.68rem] flex items-center gap-1.5">
             <ShieldCheck size={13} className="text-emerald-500" />
             <span className="font-sans font-medium text-foreground">Authentication Scheme</span>
@@ -62,7 +63,7 @@ export const SwaggerDocsView: React.FC = () => {
           <div className="text-muted-foreground text-[0.68rem] mt-0.5">Authorization header with JWT</div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs">
+        <div className="bg-card border border-border rounded-lg p-4 font-mono text-xs shadow-xs min-w-0">
           <div className="text-muted-foreground uppercase text-[0.68rem] flex items-center gap-1.5">
             <CheckCircle2 size={13} className="text-sky-400" />
             <span className="font-sans font-medium text-foreground">Active Endpoints</span>

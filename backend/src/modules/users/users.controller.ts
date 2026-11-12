@@ -24,10 +24,21 @@ export class UsersController {
 
   @Get()
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Admin only: List all registered hospital staff and patients' })
+  @ApiOperation({ summary: 'Admin only: List registered hospital accounts (supports staffOnly filter)' })
   @ApiQuery({ name: 'role', enum: Role, required: false })
-  async findAll(@Query('role') role?: PrismaRole) {
-    return this.usersService.findAll(role);
+  @ApiQuery({ name: 'staffOnly', type: Boolean, required: false })
+  async findAll(
+    @Query('role') role?: PrismaRole,
+    @Query('staffOnly') staffOnly?: string,
+  ) {
+    return this.usersService.findAll(role, staffOnly === 'true');
+  }
+
+  @Get('stats')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin only: Get counts of users by role (admins, doctors, patients, pharmacists)' })
+  async getStats() {
+    return this.usersService.getStats();
   }
 
   @Get(':id')

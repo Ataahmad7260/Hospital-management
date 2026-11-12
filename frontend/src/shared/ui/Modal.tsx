@@ -36,7 +36,7 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={cn(
-          'bg-card text-card-foreground border border-border rounded-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto'
+          'bg-card text-card-foreground border border-border rounded-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden'
         )}
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}

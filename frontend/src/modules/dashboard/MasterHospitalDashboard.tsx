@@ -67,6 +67,8 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
     appointmentDate: new Date().toISOString().split('T')[0],
     timeSlot: '09:30 - 10:00 AM',
     reason: '',
+    payUpfront: true,
+    paymentMethod: 'CARD' as 'CARD' | 'UPI' | 'ONLINE' | 'CASH',
   });
 
   useEffect(() => {
@@ -86,9 +88,9 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
       const [apts, pres, bls, docs, profile] = await Promise.all([
         api.getAppointments().catch(() => []),
         api.getPrescriptions().catch(() => []),
-        api.getBills().catch(() => []),
+        role === 'DOCTOR' ? Promise.resolve([]) : api.getBills().catch(() => []),
         api.getDoctors().catch(() => []),
-        api.getMyPatientProfile().catch(() => null),
+        role === 'PATIENT' ? api.getMyPatientProfile().catch(() => null) : Promise.resolve(null),
       ]);
       setAppointments(apts);
       setPrescriptions(pres);
@@ -115,8 +117,12 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
       return;
     }
     try {
-      await api.createAppointment(bookingForm);
-      showToast?.('Consultation booked successfully!');
+      const created = await api.createAppointment(bookingForm);
+      showToast?.(
+        created.status === 'CONFIRMED'
+          ? 'Consultation fee settled — appointment CONFIRMED!'
+          : 'Consultation booked as PENDING — settle Consultation Fee to confirm.',
+      );
       setIsBookingModalOpen(false);
       setBookingForm((prev) => ({ ...prev, reason: '' }));
       loadData();
@@ -136,11 +142,18 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
   };
 
   const handlePortalSwitch = (newRole: 'ADMIN' | 'DOCTOR' | 'PHARMACIST' | 'PATIENT') => {
+    if (role === 'ADMIN') {
+      if (newRole === 'ADMIN') onNavigate?.('admin/dashboard');
+      else if (newRole === 'DOCTOR') onNavigate?.('admin/doctors');
+      else if (newRole === 'PHARMACIST') onNavigate?.('admin/staff');
+      else if (newRole === 'PATIENT') onNavigate?.('admin/patients');
+      return;
+    }
     switchRole(newRole);
-    if (newRole === 'ADMIN') onNavigate?.('admin-portal');
-    else if (newRole === 'DOCTOR') onNavigate?.('doctor-portal');
-    else if (newRole === 'PHARMACIST') onNavigate?.('pharmacist-portal');
-    else if (newRole === 'PATIENT') onNavigate?.('patient-overview');
+    if (newRole === 'ADMIN') onNavigate?.('admin/dashboard');
+    else if (newRole === 'DOCTOR') onNavigate?.('doctor/dashboard');
+    else if (newRole === 'PHARMACIST') onNavigate?.('pharmacist/dashboard');
+    else if (newRole === 'PATIENT') onNavigate?.('patient/dashboard');
   };
 
   const pendingBills = bills.filter((b) => b.status !== 'PAID');
@@ -182,10 +195,10 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-background text-foreground flex flex-col font-sans antialiased">
       {/* 1. Sleek, Fixed Top Navigation Bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-md w-full max-w-full min-w-0">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
           {/* Brand */}
           <div className="flex items-center gap-3 shrink-0">
             <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-bold shadow-xs shrink-0">
@@ -200,11 +213,11 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
           </div>
 
           {/* Grouped Portal Switches */}
-          <div className="flex items-center bg-secondary border border-border rounded-lg p-1 text-xs gap-1 shrink-0">
+          <div className="flex items-center bg-secondary border border-border rounded-lg p-1 text-xs gap-1 min-w-0 max-w-full overflow-x-auto scrollbar-hidden shrink">
             <button
               onClick={() => handlePortalSwitch('ADMIN')}
               className={cn(
-                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none',
+                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none whitespace-nowrap shrink-0',
                 role === 'ADMIN'
                   ? 'bg-card text-foreground shadow-xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -216,7 +229,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
             <button
               onClick={() => handlePortalSwitch('DOCTOR')}
               className={cn(
-                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none',
+                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none whitespace-nowrap shrink-0',
                 role === 'DOCTOR'
                   ? 'bg-card text-foreground shadow-xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -228,7 +241,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
             <button
               onClick={() => handlePortalSwitch('PHARMACIST')}
               className={cn(
-                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none',
+                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none whitespace-nowrap shrink-0',
                 role === 'PHARMACIST'
                   ? 'bg-card text-foreground shadow-xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -240,7 +253,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
             <button
               onClick={() => handlePortalSwitch('PATIENT')}
               className={cn(
-                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none',
+                'px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-2 cursor-pointer select-none leading-none whitespace-nowrap shrink-0',
                 role === 'PATIENT'
                   ? 'bg-card text-foreground shadow-xs font-semibold'
                   : 'text-muted-foreground hover:text-foreground'
@@ -281,7 +294,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
               onValueChange={(val: string) => setActiveSubTab(val as 'overview' | 'bookings' | 'prescriptions' | 'invoices')}
               className="w-full"
             >
-              <TabsList className="bg-transparent border-0 gap-4 sm:gap-6 md:gap-8 p-0 h-12 flex justify-start rounded-none overflow-x-auto scrollbar-none w-full">
+              <TabsList className="bg-transparent border-0 gap-4 sm:gap-6 md:gap-8 p-0 h-12 flex justify-start rounded-none overflow-x-auto scrollbar-hidden w-full max-w-full min-w-0">
                 <TabsTrigger
                   value="overview"
                   className="data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-1.5 py-0 text-muted-foreground hover:text-foreground font-medium text-xs sm:text-sm flex items-center gap-2 cursor-pointer shadow-none transition-none shrink-0 whitespace-nowrap"
@@ -494,7 +507,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto w-full">
+                    <div className="overflow-x-auto scrollbar-hidden w-full max-w-full min-w-0">
                       <Table className="bg-transparent w-full border-0 rounded-none shadow-none">
                         <TableHeader>
                           <TableRow>
@@ -652,7 +665,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto w-full">
+                  <div className="overflow-x-auto scrollbar-hidden w-full max-w-full min-w-0">
                     <Table className="bg-transparent w-full border-0 rounded-none shadow-none">
                       <TableHeader>
                         <TableRow>
@@ -734,7 +747,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto w-full">
+                  <div className="overflow-x-auto scrollbar-hidden w-full max-w-full min-w-0">
                     <Table className="bg-transparent w-full border-0 rounded-none shadow-none">
                       <TableHeader>
                         <TableRow>
@@ -815,16 +828,19 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                       No Invoices On Record
                     </div>
                     <div className="text-xs text-muted-foreground mt-1.5 max-w-sm leading-relaxed">
-                      Invoices are automatically generated upon pharmacy fulfillment.
+                      Consultation Fee bills are created on booking; Pharmacy bills are generated by the pharmacist.
                     </div>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto w-full">
+                  <div className="overflow-x-auto scrollbar-hidden w-full max-w-full min-w-0">
                     <Table className="bg-transparent w-full border-0 rounded-none shadow-none">
                       <TableHeader>
                         <TableRow>
                           <TableHead className="text-xs px-6 py-3 whitespace-nowrap">
                             Invoice No
+                          </TableHead>
+                          <TableHead className="text-xs py-3 whitespace-nowrap">
+                            Stage
                           </TableHead>
                           <TableHead className="text-xs py-3">
                             Description
@@ -849,6 +865,11 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                             <TableCell className="px-6 py-3.5 font-mono text-xs text-primary font-bold whitespace-nowrap">
                               {b.invoiceNumber}
                             </TableCell>
+                            <TableCell className="py-3.5 whitespace-nowrap">
+                              <Badge variant="outline" className="font-mono text-[0.65rem] uppercase">
+                                {b.billType || 'CONSULTATION'}
+                              </Badge>
+                            </TableCell>
                             <TableCell className="py-3.5 text-xs text-foreground max-w-[200px] truncate">
                               {b.items?.[0]?.description || 'Clinical Care & Pharmacy'}
                             </TableCell>
@@ -863,13 +884,24 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                             </TableCell>
                             <TableCell className="px-6 py-3.5 text-right whitespace-nowrap">
                               {b.status !== 'PAID' ? (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handlePayBill(b.id, b.totalAmount)}
-                                  className="text-xs h-7 px-3 cursor-pointer shrink-0"
-                                >
-                                  Pay Now
-                                </Button>
+                                role !== 'DOCTOR' ? (
+                                  <Button
+                                    size="sm"
+                                    onClick={() =>
+                                      handlePayBill(
+                                        b.id,
+                                        Math.max(0.01, Number((b.totalAmount - (b.paidAmount || 0)).toFixed(2))),
+                                      )
+                                    }
+                                    className="text-xs h-7 px-3 cursor-pointer shrink-0"
+                                  >
+                                    Pay Now
+                                  </Button>
+                                ) : (
+                                  <span className="text-[0.68rem] font-mono text-amber-400 font-semibold">
+                                    Patient Pending
+                                  </span>
+                                )
                               ) : (
                                 <span className="text-[0.68rem] font-mono text-emerald-400 font-semibold inline-flex items-center gap-1 shrink-0">
                                   <Check size={12} className="shrink-0" /> Settled
@@ -980,6 +1012,30 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                   required
                   className="w-full bg-background border border-input rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 />
+              </div>
+
+              <div className="p-2.5 rounded-lg border border-border bg-secondary/50 space-y-1.5">
+                <div className="text-[0.68rem] font-mono uppercase text-muted-foreground font-semibold">
+                  Consultation Booking Payment
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="dashPayUpfront"
+                    checked={bookingForm.payUpfront}
+                    onChange={() => setBookingForm({ ...bookingForm, payUpfront: true })}
+                  />
+                  <span>Pay Consultation Fee upfront & confirm immediately</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="dashPayUpfront"
+                    checked={!bookingForm.payUpfront}
+                    onChange={() => setBookingForm({ ...bookingForm, payUpfront: false })}
+                  />
+                  <span>Book as PENDING (pay later)</span>
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">

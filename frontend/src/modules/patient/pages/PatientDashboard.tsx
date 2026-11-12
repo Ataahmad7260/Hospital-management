@@ -114,11 +114,11 @@ export const PatientDashboard: React.FC<{
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-full min-w-0">
       {/* Patient Profile Header Banner */}
       {myProfile && (
-        <div className="bg-card text-card-foreground border border-border rounded-xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm">
-          <div className="flex items-center gap-4">
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm min-w-0 max-w-full overflow-hidden">
+          <div className="flex items-center gap-4 min-w-0">
             <Avatar className="w-12 h-12 border border-border">
               <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                 {myProfile.user?.firstName?.[0]}
@@ -249,11 +249,11 @@ export const PatientDashboard: React.FC<{
       </div>
 
       {/* Two Column Layout: Clinical Consultations & Prescriptions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         {/* Next Visit / Upcoming appointments */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
-            <div className="flex items-center gap-3">
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-4 border-b border-border">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
                 <Calendar size={16} />
               </div>
@@ -333,8 +333,8 @@ export const PatientDashboard: React.FC<{
 
         {/* Active Prescriptions */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
-            <div className="flex items-center gap-3">
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-4 border-b border-border">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
                 <FileText size={16} />
               </div>
@@ -372,9 +372,9 @@ export const PatientDashboard: React.FC<{
                 {prescriptions.slice(0, 4).map((rx) => (
                   <div
                     key={rx.id}
-                    className="p-4 rounded-xl border border-border bg-card/60 hover:bg-muted/40 transition-colors flex items-center justify-between gap-4 shadow-xs"
+                    className="p-4 rounded-xl border border-border bg-card/60 hover:bg-muted/40 transition-colors flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 shadow-xs min-w-0"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="font-mono font-bold text-primary text-xs">
                         {rx.prescriptionNo}
                       </div>

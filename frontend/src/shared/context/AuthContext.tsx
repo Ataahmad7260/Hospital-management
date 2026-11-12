@@ -4,35 +4,54 @@ import { api } from '../api';
 
 export const ROLE_CREDENTIALS: Record<Role, { email: string; label: string; sub: string }> = {
   ADMIN: {
-    email: 'admin@hospital.com',
-    label: 'Chief Administrator',
-    sub: 'Hospital Operations & Staffing',
+    email: 'ataah@gmail.com',
+    label: 'Ata Ahmed (Main Super Admin)',
+    sub: 'Permanent Root Hospital Administrator',
   },
   DOCTOR: {
-    email: 'doctor.smith@hospital.com',
-    label: 'Dr. Sarah Smith',
+    email: 'ahmed@123.com',
+    label: 'Dr ahmed',
     sub: 'Cardiology Consultant',
   },
   PHARMACIST: {
-    email: 'pharmacist.alex@hospital.com',
-    label: 'Alex Turner',
-    sub: 'Central Pharmacy Dispensary',
+    email: 'aqdus@123.com',
+    label: 'Aqdus',
+    sub: 'Pharmacist'
   },
   PATIENT: {
-    email: 'patient.jane@example.com',
-    label: 'Jane Doe',
-    sub: 'Registered Patient',
+    email: 'maaz@123.com',
+    label: 'Maaz',
+    sub: 'Patient'
   },
+};
+
+export const ROLE_REDIRECT_MAP: Record<Role, string> = {
+  ADMIN: 'admin/dashboard',
+  DOCTOR: 'doctor/dashboard',
+  PHARMACIST: 'pharmacist/dashboard',
+  PATIENT: 'patient/dashboard',
 };
 
 interface AuthContextType {
   currentUser: User | null;
   role: Role;
+  isAuthenticated: boolean;
   loading: boolean;
   toast: { message: string; isError?: boolean } | null;
   showToast: (message: string, isError?: boolean) => void;
   switchRole: (role: Role) => Promise<void>;
-  login: (email: string, password?: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<User>;
+  register: (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role?: Role;
+    phoneNumber?: string;
+    gender?: string;
+    bloodGroup?: string;
+    dateOfBirth?: string;
+  }) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -49,11 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTimeout(() => setToast(null), 3500);
   };
 
-  const role: Role = currentUser?.role || 'ADMIN';
+  const role: Role = currentUser?.role || 'PATIENT';
+  const isAuthenticated = Boolean(currentUser && api.getToken());
 
+  // On mount: verify token validity if user exists
   useEffect(() => {
-    if (!currentUser) {
-      switchRole('ADMIN');
+    if (api.getToken()) {
+      refreshUser();
     }
   }, []);
 
@@ -71,14 +92,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password = 'Hospital123!') => {
+  const login = async (email: string, password = 'Hospital123!'): Promise<User> => {
     setLoading(true);
     try {
       const res = await api.login(email, password);
       setCurrentUser(res.user);
       showToast(`Welcome back, ${res.user.firstName}!`);
+      return res.user;
     } catch (err: any) {
       showToast(err.message || 'Login failed', true);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (data: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role?: Role;
+    phoneNumber?: string;
+    gender?: string;
+    bloodGroup?: string;
+    dateOfBirth?: string;
+  }): Promise<User> => {
+    setLoading(true);
+    try {
+      const res = await api.register(data);
+      setCurrentUser(res.user);
+      showToast(`Account successfully created. Welcome, ${res.user.firstName}!`);
+      return res.user;
+    } catch (err: any) {
+      showToast(err.message || 'Registration failed', true);
       throw err;
     } finally {
       setLoading(false);
@@ -88,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     api.clearToken();
     setCurrentUser(null);
+    window.location.hash = '#/login';
     showToast('Signed out of session');
   };
 
@@ -95,8 +143,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const user = await api.getMe();
       setCurrentUser(user);
-    } catch (err) {
-      console.error('Failed to refresh user', err);
+      api.setSavedUser(user, false);
+    } catch (err: any) {
+      console.warn('Could not refresh session token:', err);
+      if (/401|unauthorized|inactive|no longer exists/i.test(err?.message || '')) {
+        api.clearToken();
+        setCurrentUser(null);
+      }
     }
   };
 
@@ -105,11 +158,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         role,
+        isAuthenticated,
         loading,
         toast,
         showToast,
         switchRole,
         login,
+        register,
         logout,
         refreshUser,
       }}

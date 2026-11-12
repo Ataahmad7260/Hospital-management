@@ -21,25 +21,25 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={cn(
-        'bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors',
+        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors',
         className
       )}
     >
       {(title || action) && (
-        <div className="flex items-start justify-between mb-4 gap-4">
-          <div>
+        <div className="flex flex-wrap items-start justify-between mb-4 gap-4 min-w-0 max-w-full">
+          <div className="min-w-0 flex-1 basis-56">
             {title && (
-              <div className="text-base font-semibold text-foreground flex items-center gap-2">
-                {icon && <span className="text-primary">{icon}</span>}
-                <span>{title}</span>
+              <div className="text-base font-semibold text-foreground flex items-center gap-2 min-w-0">
+                {icon && <span className="text-primary shrink-0">{icon}</span>}
+                <span className="min-w-0 break-words">{title}</span>
               </div>
             )}
-            {subtitle && <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>}
+            {subtitle && <div className="text-xs text-muted-foreground mt-1 break-words">{subtitle}</div>}
           </div>
-          {action && <div className="shrink-0">{action}</div>}
+          {action && <div className="flex flex-wrap items-center gap-2 max-w-full min-w-0">{action}</div>}
         </div>
       )}
-      <div>{children}</div>
+      <div className="w-full max-w-full min-w-0">{children}</div>
     </div>
   );
 };
@@ -56,7 +56,7 @@ export const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, icon, c
   return (
     <div
       className={cn(
-        'bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors flex flex-col justify-between gap-3',
+        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors flex flex-col justify-between gap-3',
         className
       )}
     >

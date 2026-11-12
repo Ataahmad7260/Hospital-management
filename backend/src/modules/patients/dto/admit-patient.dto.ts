@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsOptional, IsString, IsEnum, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsEnum, IsNumber, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Gender, BloodGroup } from '@prisma/client';
+import { Gender, BloodGroup, PaymentMethod } from '@prisma/client';
 
 export class AdmitPatientDto {
   @ApiProperty({ description: 'Patient first name', example: 'Arthur' })
@@ -81,4 +81,30 @@ export class AdmitPatientDto {
   @ApiPropertyOptional({ description: 'Known allergies list', example: ['Penicillin'] })
   @IsOptional()
   allergies?: string[];
+
+  @ApiPropertyOptional({
+    description: "Consultation fee payment confirmation status ('PAID' required before admitting patient)",
+    example: 'PAID',
+  })
+  @IsOptional()
+  @IsString()
+  paymentStatus?: string;
+
+  @ApiPropertyOptional({
+    enum: PaymentMethod,
+    description: 'Payment method used to settle consultation fee upfront',
+    example: PaymentMethod.CARD,
+  })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  paymentMethod?: PaymentMethod;
+
+  @ApiPropertyOptional({
+    description: 'Confirmed upfront consultation fee amount paid',
+    example: 75,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  paidAmount?: number;
 }

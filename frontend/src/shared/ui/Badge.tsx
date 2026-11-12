@@ -36,11 +36,14 @@ export const Badge: React.FC<BadgeProps> = ({
 export const StatusPill: React.FC<{ status: string; className?: string }> = ({ status, className = '' }) => {
   const norm = (status || '').toUpperCase();
   const isPositive = ['ACTIVE', 'COMPLETED', 'PAID', 'DISPENSED'].includes(norm);
-  const isWarning = ['PENDING', 'IN_PROGRESS', 'SCHEDULED', 'ISSUED'].includes(norm);
-  const isInactive = ['CANCELLED', 'INACTIVE'].includes(norm);
+  const isWarning = ['PENDING', 'IN_PROGRESS', 'SCHEDULED', 'ISSUED', 'REVIEW'].includes(norm);
+  const isFollowUp = ['FOLLOW_UP', 'CONFIRMED'].includes(norm);
+  const isInactive = ['CANCELLED', 'INACTIVE', 'NO_SHOW'].includes(norm);
 
   const style = isPositive
     ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+    : isFollowUp
+    ? 'bg-sky-500/15 text-sky-400 border-sky-500/30'
     : isWarning
     ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
     : isInactive
@@ -56,7 +59,7 @@ export const StatusPill: React.FC<{ status: string; className?: string }> = ({ s
       )}
     >
       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
-      {status}
+      {status.replace(/_/g, ' ')}
     </span>
   );
 };

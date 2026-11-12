@@ -65,7 +65,7 @@ export const DailyPatientAdmissionsGraph: React.FC<Props> = ({
   const totalInView = filteredData.reduce((acc, d) => acc + d.count, 0);
 
   return (
-    <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm flex flex-col gap-6">
+    <div className="bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm flex flex-col gap-6 w-full max-w-full min-w-0 overflow-hidden">
       {/* Header and Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
@@ -196,8 +196,8 @@ export const DailyPatientAdmissionsGraph: React.FC<Props> = ({
       </div>
 
       {/* Interactive Bar Chart Visualization */}
-      <div className="relative bg-secondary/30 border border-border rounded-xl p-5 pt-8">
-        <div className="h-44 sm:h-52 flex items-end gap-2 justify-between">
+      <div className="relative bg-secondary/30 border border-border rounded-xl p-5 pt-8 w-full max-w-full min-w-0 overflow-hidden">
+        <div className="h-44 sm:h-52 flex items-end gap-2 justify-between overflow-x-auto scrollbar-hidden min-w-0 max-w-full">
           {filteredData.map((day) => {
             const heightPercent = Math.max((day.count / maxCount) * 100, 6);
             const isHovered = hoveredDay?.date === day.date;
@@ -206,7 +206,7 @@ export const DailyPatientAdmissionsGraph: React.FC<Props> = ({
             return (
               <div
                 key={day.date}
-                className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
+                className="flex-1 min-w-[18px] flex flex-col items-center h-full justify-end group cursor-pointer"
                 onMouseEnter={() => setHoveredDay(day)}
                 onMouseLeave={() => setHoveredDay(null)}
                 onClick={() => onSelectDay?.(day.date)}
@@ -287,7 +287,7 @@ export const DailyPatientAdmissionsGraph: React.FC<Props> = ({
           <span>Recent Admission Log by Day</span>
           <span>Admitted Count</span>
         </div>
-        <div className="divide-y divide-border max-h-48 overflow-y-auto">
+        <div className="divide-y divide-border max-h-48 overflow-y-auto overflow-x-hidden">
           {filteredData
             .slice()
             .reverse()

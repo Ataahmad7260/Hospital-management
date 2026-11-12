@@ -22,7 +22,7 @@ enum Role {
 enum Gender {
   MALE
   FEMALE
-  OTHER
+  OTHER 
 }
 
 enum BloodGroup {
@@ -41,6 +41,8 @@ enum AppointmentStatus {
   PENDING
   CONFIRMED
   IN_PROGRESS
+  REVIEW
+  FOLLOW_UP
   COMPLETED
   CANCELLED
   NO_SHOW
@@ -61,12 +63,51 @@ enum BillStatus {
   REFUNDED
 }
 
+enum BillCategory {
+  CONSULTATION
+  PHARMACY
+  OTHER
+}
+
 enum PaymentMethod {
   CASH
   CARD
   INSURANCE
   ONLINE
   UPI
+}
+
+enum HospitalStaffCategory {
+  NURSE
+  HEAD_NURSE
+  MIDWIFE
+  WARD_BOY
+  WARD_GIRL
+  LAB_TECHNICIAN
+  RADIOLOGY_TECHNICIAN
+  OT_TECHNICIAN
+  PHARMACY_ASSISTANT
+  PARAMEDIC
+  PHYSIOTHERAPIST
+  RECEPTIONIST
+  BILLING_CLERK
+  HOUSEKEEPING
+  SECURITY
+  ADMIN_STAFF
+  OTHER
+}
+
+enum StaffShift {
+  MORNING
+  EVENING
+  NIGHT
+  ROTATIONAL
+}
+
+enum HospitalStaffStatus {
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
 }
 
 // ----------------------------------------------------
@@ -91,6 +132,12 @@ type PrescriptionItem {
   durationDays Int // e.g. 5
   instructions String? // e.g. Take after breakfast
   dispensed    Boolean @default(false)
+}
+
+type LabTestItem {
+  testName     String // e.g. CBC, Fasting Blood Sugar, Chest X-Ray
+  urgency      String? // e.g. Routine, Urgent, STAT
+  instructions String? // e.g. Fasting 8-10 hours before test
 }
 
 type BillItem {
@@ -136,7 +183,7 @@ model User {
 model AdminProfile {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @unique @db.ObjectId
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   department  String?
   designation String?
   createdAt   DateTime @default(now())
@@ -148,7 +195,7 @@ model AdminProfile {
 model DoctorProfile {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   userId          String          @unique @db.ObjectId
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   specialization  String
   licenseNumber   String          @unique
   qualifications  String[]        @default([])
@@ -169,7 +216,7 @@ model DoctorProfile {
 model PatientProfile {
   id                    String          @id @default(auto()) @map("_id") @db.ObjectId
   userId                String          @unique @db.ObjectId
-  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   dateOfBirth           DateTime?
   gender                Gender          @default(OTHER)
   bloodGroup            BloodGroup      @default(UNKNOWN)
@@ -180,6 +227,7 @@ model PatientProfile {
   chronicDiseases       String[]        @default([])
   appointments          Appointment[]
   medicalRecords        MedicalRecord[]
+  uploadedReports       MedicalReport[]
   prescriptions         Prescription[]
   bills                 Bill[]
   createdAt             DateTime        @default(now())
@@ -191,7 +239,7 @@ model PatientProfile {
 model PharmacistProfile {
   id            String         @id @default(auto()) @map("_id") @db.ObjectId
   userId        String         @unique @db.ObjectId
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   licenseNumber String         @unique
   pharmacyBlock String?
   prescriptions DispensedLog[]
@@ -199,6 +247,31 @@ model PharmacistProfile {
   updatedAt     DateTime       @updatedAt
 
   @@map("pharmacist_profiles")
+}
+
+model HospitalStaff {
+  id               String                @id @default(auto()) @map("_id") @db.ObjectId
+  employeeCode     String                @unique
+  firstName        String
+  lastName         String
+  category         HospitalStaffCategory
+  designation      String
+  gender           Gender                @default(OTHER)
+  phoneNumber      String
+  email            String?
+  department       String
+  assignedWard     String?
+  shift            StaffShift            @default(MORNING)
+  qualification    String?
+  monthlySalary    Float?
+  emergencyContact String?
+  joiningDate      DateTime              @default(now())
+  status           HospitalStaffStatus   @default(ACTIVE)
+  notes            String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@map("hospital_staff")
 }
 
 // ----------------------------------------------------
@@ -229,11 +302,33 @@ model Appointment {
   reason          String?
   doctorNotes     String?
   medicalRecord   MedicalRecord?
-  bill            Bill?
+  prescriptions   Prescription[]
+  medicalReports  MedicalReport[]
+  bills           Bill[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
   @@map("appointments")
+}
+
+model MedicalReport {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  patientId     String         @db.ObjectId
+  patient       PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId String?        @db.ObjectId
+  appointment   Appointment?   @relation(fields: [appointmentId], references: [id])
+  title         String
+  reportType    String         @default("LAB_REPORT")
+  fileName      String
+  storedName    String
+  mimeType      String
+  fileSize      Int
+  notes         String?
+  uploadedById  String         @db.ObjectId
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("medical_reports")
 }
 
 model MedicalRecord {
@@ -264,10 +359,15 @@ model Prescription {
   doctor          DoctorProfile      @relation(fields: [doctorId], references: [id])
   medicalRecordId String?            @db.ObjectId
   medicalRecord   MedicalRecord?     @relation(fields: [medicalRecordId], references: [id])
+  appointmentId   String?            @db.ObjectId
+  appointment     Appointment?       @relation(fields: [appointmentId], references: [id])
   items           PrescriptionItem[]
+  labTests        LabTestItem[]
   status          PrescriptionStatus @default(ISSUED)
+  isFinalized     Boolean            @default(false)
   doctorNotes     String?
   dispensedLogs   DispensedLog[]
+  bills           Bill[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
@@ -316,10 +416,13 @@ model Medicine {
 model Bill {
   id             String         @id @default(auto()) @map("_id") @db.ObjectId
   invoiceNumber  String         @unique
+  billType       BillCategory   @default(CONSULTATION)
   patientId      String         @db.ObjectId
   patient        PatientProfile @relation(fields: [patientId], references: [id])
-  appointmentId  String?        @unique @db.ObjectId
+  appointmentId  String?        @db.ObjectId
   appointment    Appointment?   @relation(fields: [appointmentId], references: [id])
+  prescriptionId String?        @db.ObjectId
+  prescription   Prescription?  @relation(fields: [prescriptionId], references: [id])
   items          BillItem[]
   subtotal       Float
   taxAmount      Float          @default(0.0)

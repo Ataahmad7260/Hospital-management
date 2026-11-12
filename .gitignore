@@ -45,3 +45,17 @@ coverage/
 .env.local
 .env.*.local
 !.env.example
+
+# Uploaded medical reports
+uploads/
+**/uploads/
+
+# Playwright artifacts
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
+blob-report/
+**/blob-report/
+**/playwright/.cache/
+**/playwright/.auth/

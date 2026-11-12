@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { AdmitPatientDto } from './dto/admit-patient.dto';
@@ -18,13 +18,20 @@ export class PatientsController {
 
   /**
    * Admit New Patient by writing name, condition, assigning doctor, and vitals.
-   * Immediately routes case into the Doctor Portal queue.
+   * Requires upfront consultation fee settlement (paymentStatus: 'PAID') before creating patient record & routing to doctor queue.
    */
   @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
   @Post('admit')
-  @ApiOperation({ summary: 'Admit new patient with name & symptoms, route to Doctor consultation queue' })
+  @ApiOperation({
+    summary: 'Admit new patient with upfront PAID consultation fee & route to Doctor consultation queue',
+  })
   @ApiResponse({ status: 201, description: 'Patient admitted successfully' })
   async admitPatient(@Body() dto: AdmitPatientDto, @CurrentUser() user: any) {
+    if (String(dto.paymentStatus || '').toUpperCase() !== 'PAID') {
+      throw new BadRequestException(
+        'Consultation fee must be paid before admitting patient and routing to doctor queue',
+      );
+    }
     return this.patientsService.admitPatient(dto, user);
   }
 

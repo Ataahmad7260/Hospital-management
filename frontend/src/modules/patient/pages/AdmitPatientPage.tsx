@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, ArrowRight, HeartPulse, CheckCircle2, Stethoscope, AlertCircle } from 'lucide-react';
-import { Card, Button, FormGroup, FormRow } from '../../../shared/ui';
+import {
+  UserPlus,
+  ArrowRight,
+  HeartPulse,
+  CheckCircle2,
+  Stethoscope,
+  AlertCircle,
+  CreditCard,
+  ShieldCheck,
+} from 'lucide-react';
+import { Card, Button, FormGroup, FormRow, Modal } from '../../../shared/ui';
 import { api } from '../../../shared/api';
 import type { Doctor } from '../../../shared/types';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -11,9 +20,11 @@ interface Props {
 }
 
 export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigateToOverview }) => {
-  const { showToast, switchRole } = useAuth();
+  const { showToast, switchRole, role } = useAuth();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH' | 'UPI' | 'ONLINE'>('CARD');
   const [lastAdmitted, setLastAdmitted] = useState<{
     id: string;
     patientName: string;
@@ -56,13 +67,17 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
     }
   };
 
-  const handleAdmit = async (e: React.FormEvent) => {
+  const selectedDoctor = doctors.find((d) => d.id === form.doctorId) || null;
+  const consultationFee = Number(selectedDoctor?.consultationFee ?? 0);
+
+  // Step 1: Cannot save without upfront consultation fee settlement — open Payment Modal
+  const handleAdmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName.trim() || !form.lastName.trim()) {
       showToast('Please write the patient first and last name', true);
       return;
     }
-    if (!form.doctorId) {
+    if (!form.doctorId || !selectedDoctor) {
       showToast('Please assign an attending doctor', true);
       return;
     }
@@ -71,11 +86,20 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
       return;
     }
 
+    setIsPaymentModalOpen(true);
+  };
+
+  // Step 2: Settle Consultation Fee Upfront & Confirm Admission
+  const handleConfirmPaidAdmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDoctor) return;
+
     setLoading(true);
     try {
-      const allergiesList = form.allergies && form.allergies.toLowerCase() !== 'none'
-        ? form.allergies.split(',').map((s) => s.trim()).filter(Boolean)
-        : [];
+      const allergiesList =
+        form.allergies && form.allergies.toLowerCase() !== 'none'
+          ? form.allergies.split(',').map((s) => s.trim()).filter(Boolean)
+          : [];
 
       const res = await api.admitPatient({
         firstName: form.firstName.trim(),
@@ -94,12 +118,12 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
         heartRate: Number(form.heartRate),
         oxygenSaturation: Number(form.oxygenSaturation),
         allergies: allergiesList,
+        paymentStatus: 'PAID',
+        paymentMethod,
+        paidAmount: consultationFee,
       });
 
-      const assignedDoctor = doctors.find((d) => d.id === form.doctorId);
-      const doctorFullName = assignedDoctor
-        ? `Dr. ${assignedDoctor.user.firstName} ${assignedDoctor.user.lastName}`
-        : 'Doctor';
+      const doctorFullName = `Dr. ${selectedDoctor.user.firstName} ${selectedDoctor.user.lastName}`;
 
       setLastAdmitted({
         id: res.admission.id,
@@ -108,7 +132,10 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
         doctorId: form.doctorId,
       });
 
-      showToast(`Patient ${form.firstName} ${form.lastName} admitted successfully! Sent to doctor portal queue.`);
+      setIsPaymentModalOpen(false);
+      showToast(
+        `Consultation fee ($${consultationFee.toFixed(2)}) PAID — Patient ${form.firstName} ${form.lastName} admitted & routed to doctor queue!`,
+      );
     } catch (err: any) {
       showToast(err.message || 'Failed to admit patient', true);
     } finally {
@@ -117,7 +144,9 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
   };
 
   const handleGoToDoctor = () => {
-    switchRole('DOCTOR');
+    if (role !== 'ADMIN') {
+      switchRole('DOCTOR');
+    }
     if (onAdmittedSuccess && lastAdmitted) {
       onAdmittedSuccess(lastAdmitted.doctorId);
     }
@@ -137,17 +166,17 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto w-full">
+    <div className="space-y-6 max-w-4xl mx-auto w-full min-w-0">
       {/* Success Notification Banner when patient is admitted */}
       {lastAdmitted && (
         <div className="bg-card border border-emerald-500/30 rounded-xl p-5 mb-6 shadow-sm animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
                 <CheckCircle2 size={22} />
               </div>
-              <div>
-                <div className="text-base font-bold text-foreground flex items-center gap-2">
+              <div className="min-w-0">
+                <div className="text-base font-bold text-foreground flex flex-wrap items-center gap-2">
                   <span>Patient Admitted: {lastAdmitted.patientName}</span>
                   <span className="text-[0.65rem] font-medium px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     STATUS: ROUTED TO DOCTOR
@@ -159,13 +188,13 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={resetForm}>
                 Admit Another
               </Button>
               {onNavigateToOverview && (
                 <Button variant="outline" size="sm" onClick={onNavigateToOverview}>
-                  View All in Overview
+                  {role === 'ADMIN' ? 'View in Patients Registry' : 'View All in Overview'}
                 </Button>
               )}
               <Button
@@ -174,7 +203,7 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
                 icon={<Stethoscope size={14} />}
                 onClick={handleGoToDoctor}
               >
-                Go to Doctor Portal Now <ArrowRight size={13} className="ml-1" />
+                {role === 'ADMIN' ? 'View Patient Records' : 'Go to Doctor Portal Now'} <ArrowRight size={13} className="ml-1" />
               </Button>
             </div>
           </div>
@@ -188,7 +217,7 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
       >
         <form onSubmit={handleAdmit} className="space-y-5">
           {/* Section 1: Patient Identity */}
-          <div className="bg-muted/30 p-4 rounded-lg border border-border">
+          <div className="bg-muted/30 p-4 rounded-lg border border-border min-w-0 max-w-full">
             <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary"></span>
               <span>1. Patient Identity & Contact Details</span>
@@ -278,17 +307,18 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
           </div>
 
           {/* Section 2: Clinical Assignment & Reason */}
-          <div className="bg-muted/30 p-4 rounded-lg border border-border">
+          <div className="bg-muted/30 p-4 rounded-lg border border-border min-w-0 max-w-full">
             <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-primary"></span>
               <span>2. Attending Physician Assignment & Clinical Symptoms</span>
             </div>
 
-            <FormGroup label="Assign Attending Doctor *">
+            <FormGroup label="Assigned Attending Doctor *">
               <select
                 value={form.doctorId}
                 onChange={(e) => setForm({ ...form, doctorId: e.target.value })}
                 required
+                className="w-full max-w-full min-w-0 truncate"
               >
                 <option value="">Select Doctor who conducts this patient...</option>
                 {doctors.map((d) => (
@@ -298,6 +328,28 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
                 ))}
               </select>
             </FormGroup>
+
+            {selectedDoctor && (
+              <div className="mb-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Stethoscope size={16} className="text-amber-400 shrink-0" />
+                  <div>
+                    <div className="text-xs font-semibold text-foreground">
+                      Dr. {selectedDoctor.user.firstName} {selectedDoctor.user.lastName} ({selectedDoctor.specialization})
+                    </div>
+                    <div className="text-[11px] font-mono text-muted-foreground">
+                      Upfront consultation fee must be paid before admitting &amp; routing to queue
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-mono uppercase text-amber-300">Consultation Fee</div>
+                  <div className="text-base font-bold font-mono text-foreground">
+                    ${consultationFee.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <FormGroup label="Patient Condition / Symptoms for Admission *">
               <textarea
@@ -332,8 +384,8 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
           </div>
 
           {/* Section 3: Vitals at Admission */}
-          <div className="bg-muted/30 p-4 rounded-lg border border-border">
-            <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+          <div className="bg-muted/30 p-4 rounded-lg border border-border min-w-0">
+            <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <HeartPulse size={14} className="text-rose-400" />
                 <span>3. Initial Vital Signs Recorded at Intake</span>
@@ -394,20 +446,89 @@ export const AdmitPatientPage: React.FC<Props> = ({ onAdmittedSuccess, onNavigat
           <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-border">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <AlertCircle size={14} />
-              <span>Patient record will be created and forwarded directly to the Doctor Portal.</span>
+              <span>
+                Upfront consultation fee (${consultationFee.toFixed(2)}) required before routing to the Doctor queue.
+              </span>
             </div>
 
             <Button
               type="submit"
               variant="primary"
               disabled={loading}
-              icon={<UserPlus size={15} />}
+              icon={<CreditCard size={15} />}
+              className="w-full sm:w-auto max-w-full"
             >
-              {loading ? 'Admitting Patient...' : 'Complete Admission & Send to Doctor Portal'}
+              Admit Patient (${consultationFee.toFixed(2)} Payment Step)
             </Button>
           </div>
         </form>
       </Card>
+
+      {/* Upfront Consultation Fee Payment Modal */}
+      {isPaymentModalOpen && selectedDoctor && (
+        <Modal
+          isOpen={true}
+          onClose={() => !loading && setIsPaymentModalOpen(false)}
+          title="Upfront Consultation Fee Payment"
+        >
+          <form onSubmit={handleConfirmPaidAdmission} className="space-y-4 text-xs">
+            <div className="p-3.5 rounded-lg border border-border bg-muted/40 space-y-2 font-mono">
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">Patient:</span>
+                <strong className="text-foreground">
+                  {form.firstName} {form.lastName}
+                </strong>
+              </div>
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground">Attending Doctor:</span>
+                <span className="text-foreground">
+                  Dr. {selectedDoctor.user.firstName} {selectedDoctor.user.lastName}
+                </span>
+              </div>
+              <div className="flex justify-between gap-2 pt-2 border-t border-border text-sm">
+                <span className="font-semibold text-foreground">Consultation Fee Due:</span>
+                <strong className="text-emerald-400">${consultationFee.toFixed(2)}</strong>
+              </div>
+            </div>
+
+            <FormGroup label="Payment Method *">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as any)}
+                required
+              >
+                <option value="CARD">Debit / Credit Card</option>
+                <option value="CASH">Cash at Admission Desk</option>
+                <option value="UPI">UPI / Instant QR</option>
+                <option value="ONLINE">Online Gateway</option>
+              </select>
+            </FormGroup>
+
+            <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 flex items-center gap-2 font-mono text-[11px]">
+              <ShieldCheck size={15} className="shrink-0 text-emerald-400" />
+              <span>
+                Confirming payment creates the patient record, settles the consultation bill, and routes to Dr. {selectedDoctor.user.firstName}&apos;s queue.
+              </span>
+            </div>
+
+            <div className="modal-footer flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                onClick={() => setIsPaymentModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading
+                  ? 'Processing Payment & Admitting...'
+                  : `Pay $${consultationFee.toFixed(2)} & Admit Patient`}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 };

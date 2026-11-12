@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PaymentMethod } from '@prisma/client';
+import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateAppointmentDto {
   @ApiProperty({ example: '652f1b2c4f8d2b001a123456', description: 'Doctor profile ObjectId' })
@@ -26,4 +27,22 @@ export class CreateAppointmentDto {
   @IsString()
   @IsOptional()
   reason?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    default: false,
+    description: 'If true, settle consultation fee upfront during booking to immediately confirm the appointment',
+  })
+  @IsBoolean()
+  @IsOptional()
+  payUpfront?: boolean;
+
+  @ApiPropertyOptional({
+    enum: PaymentMethod,
+    default: PaymentMethod.CARD,
+    description: 'Payment method used for upfront consultation fee settlement',
+  })
+  @IsEnum(PaymentMethod)
+  @IsOptional()
+  paymentMethod?: PaymentMethod;
 }

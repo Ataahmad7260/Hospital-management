@@ -1,6 +1,26 @@
 // API Client for AURA Hospital Management Backend
 
-const API_BASE_URL = '/api/v1';
+const PRODUCTION_API_URL = 'https://hospital-management-73fq.onrender.com/api/v1';
+
+function normalizeApiBaseUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '');
+  if (!trimmed) return PRODUCTION_API_URL;
+  if (trimmed === '/api/v1' || trimmed.endsWith('/api/v1')) {
+    return trimmed;
+  }
+  if (trimmed.endsWith('/api')) {
+    return `${trimmed}/v1`;
+  }
+  if (/^https?:\/\/[^/]+$/i.test(trimmed)) {
+    return `${trimmed}/api/v1`;
+  }
+  return trimmed;
+}
+
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const API_BASE_URL = normalizeApiBaseUrl(
+  configuredApiUrl || (import.meta.env.DEV ? '/api/v1' : PRODUCTION_API_URL),
+);
 
 export interface User {
   id: string;
@@ -59,8 +79,9 @@ export interface Appointment {
   patientId: string;
   appointmentDate: string;
   timeSlot: string;
-  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'REVIEW' | 'FOLLOW_UP' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
   reason?: string;
+  doctorNotes?: string;
   doctor?: {
     user: { firstName: string; lastName: string };
   };
@@ -84,6 +105,11 @@ export interface Prescription {
     durationDays: number;
     instructions?: string;
     dispensed: boolean;
+  }[];
+  labTests?: {
+    testName: string;
+    urgency?: string;
+    instructions?: string;
   }[];
   patient?: {
     user: { firstName: string; lastName: string };
@@ -129,16 +155,32 @@ export interface Bill {
   }[];
 }
 
+const TAB_LOGOUT_KEY = 'aura_tab_logged_out';
+
 class ApiService {
   private getToken(): string | null {
-    return localStorage.getItem('aura_token');
+    if (typeof window !== 'undefined' && sessionStorage.getItem(TAB_LOGOUT_KEY) !== '1') {
+      const tabToken = sessionStorage.getItem('aura_token');
+      if (tabToken) return tabToken;
+      const sharedToken = localStorage.getItem('aura_token');
+      if (sharedToken) {
+        sessionStorage.setItem('aura_token', sharedToken);
+        return sharedToken;
+      }
+    }
+    return typeof window !== 'undefined' ? sessionStorage.getItem('aura_token') : null;
   }
 
   setToken(token: string) {
+    sessionStorage.removeItem(TAB_LOGOUT_KEY);
+    sessionStorage.setItem('aura_token', token);
     localStorage.setItem('aura_token', token);
   }
 
   clearToken() {
+    sessionStorage.setItem(TAB_LOGOUT_KEY, '1');
+    sessionStorage.removeItem('aura_token');
+    sessionStorage.removeItem('aura_user');
     localStorage.removeItem('aura_token');
     localStorage.removeItem('aura_user');
   }
@@ -182,6 +224,7 @@ class ApiService {
       body: JSON.stringify({ email, password }),
     });
     this.setToken(res.accessToken);
+    sessionStorage.setItem('aura_user', JSON.stringify(res.user));
     localStorage.setItem('aura_user', JSON.stringify(res.user));
     return res;
   }
@@ -192,6 +235,7 @@ class ApiService {
       body: JSON.stringify(data),
     });
     this.setToken(res.accessToken);
+    sessionStorage.setItem('aura_user', JSON.stringify(res.user));
     localStorage.setItem('aura_user', JSON.stringify(res.user));
     return res;
   }
@@ -255,6 +299,7 @@ class ApiService {
     doctorId: string;
     doctorNotes?: string;
     items: { medicineName: string; dosage: string; frequency: string; durationDays: number; instructions?: string }[];
+    labTests?: { testName: string; urgency?: string; instructions?: string }[];
   }) {
     return this.request<Prescription>('/prescriptions', {
       method: 'POST',
