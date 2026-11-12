@@ -47,7 +47,7 @@ bun dev
 ```
 This concurrently launches:
 - **NestJS API Backend**: `http://localhost:4000/api/v1`
-- **Interactive Swagger Docs**: `http://localhost:4000/api/docs`
+- **Postman API Hub & Collection**: `http://localhost:4000/api/docs`
 - **Monochromatic Frontend UI**: `http://localhost:3000`
 
 ---

@@ -175,3 +175,118 @@ export interface HealthStatus {
   roles: string[];
   timestamp: string;
 }
+
+export interface AdmitPatientPayload {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phoneNumber?: string;
+  gender?: string;
+  bloodGroup?: string;
+  dateOfBirth?: string;
+  doctorId: string;
+  reason: string;
+  timeSlot?: string;
+  appointmentDate?: string;
+  bloodPressure?: string;
+  temperature?: number;
+  heartRate?: number;
+  oxygenSaturation?: number;
+  allergies?: string[];
+}
+
+export interface PatientOverviewRecord {
+  id: string;
+  admissionDate: string;
+  timeSlot: string;
+  status: AppointmentStatus;
+  reason: string;
+  patient: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    gender: string;
+    bloodGroup: string;
+  };
+  attendingDoctor: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    specialization: string;
+    department: string;
+    consultationFee: number;
+  };
+  medicalRecord?: {
+    diagnosis: string;
+    symptoms: string[];
+    clinicalNotes?: string;
+    vitals?: {
+      bloodPressure?: string;
+      temperature?: number;
+      heartRate?: number;
+      oxygenSaturation?: number;
+    };
+  } | null;
+  prescriptions: Array<{
+    id: string;
+    prescriptionNo: string;
+    status: PrescriptionStatus;
+    doctorNotes?: string;
+    createdAt: string;
+    items: PrescriptionItem[];
+    dispensedLogs?: any[];
+  }>;
+  billing?: {
+    id: string;
+    invoiceNumber: string;
+    totalAmount: number;
+    paidAmount: number;
+    subtotal: number;
+    taxAmount: number;
+    status: BillStatus;
+    paymentMethod: string;
+    paidAt?: string;
+    items: BillItem[];
+  } | null;
+}
+
+export interface DailyAdmissionsStats {
+  dailyData: Array<{
+    date: string;
+    formattedDate: string;
+    count: number;
+    patients: string[];
+  }>;
+  summary: {
+    totalAdmissions: number;
+    todayCount: number;
+    averageDaily: string;
+    peakDay: {
+      date: string;
+      formattedDate: string;
+      count: number;
+    };
+  };
+}
+
+export interface PageTrackingStats {
+  totalViews: number;
+  uniquePages: number;
+  viewsByPage: Record<string, number>;
+  viewsByRole: Record<string, number>;
+  viewsByDay: Record<string, number>;
+  topPages: Array<{ url: string; count: number }>;
+  recentViews: Array<{
+    id: string;
+    pageUrl: string;
+    pageTitle: string;
+    userRole: string;
+    userId?: string;
+    ipAddress: string;
+    userAgent: string;
+    timestamp: string;
+  }>;
+  timestamp: string;
+}

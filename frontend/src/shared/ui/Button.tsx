@@ -1,7 +1,8 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   icon?: React.ReactNode;
 }
@@ -16,28 +17,29 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center gap-1.5 font-semibold transition-all duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap select-none';
+    'inline-flex items-center justify-center gap-2 font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap select-none rounded-md focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring';
 
   const variantClasses = {
-    primary: 'bg-white text-black hover:bg-mono-200 border border-white',
-    secondary: 'bg-mono-800 text-white hover:bg-mono-700 border border-mono-700 hover:border-mono-600',
-    outline: 'bg-transparent text-white border border-mono-700 hover:border-white hover:bg-mono-900',
-    ghost: 'bg-transparent text-mono-400 hover:text-white hover:bg-mono-850',
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border shadow-xs',
+    outline: 'bg-background text-foreground border border-input hover:bg-accent hover:text-accent-foreground shadow-xs',
+    ghost: 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm',
   }[variant];
 
   const sizeClasses = {
-    sm: 'px-2.5 py-1 text-xs rounded',
-    md: 'px-3.5 py-1.5 text-xs rounded-md',
-    lg: 'px-5 py-2.5 text-sm rounded-lg',
+    sm: 'h-8 px-3 text-xs',
+    md: 'h-9 px-4 py-2 text-sm',
+    lg: 'h-10 px-6 py-2.5 text-base',
   }[size];
 
   return (
     <button
-      className={`${baseClasses} ${variantClasses} ${sizeClasses} ${className}`}
+      className={cn(baseClasses, variantClasses, sizeClasses, className)}
       disabled={disabled}
       {...props}
     >
-      {icon && <span className="inline-flex items-center">{icon}</span>}
+      {icon && <span className="inline-flex items-center shrink-0">{icon}</span>}
       {children && <span>{children}</span>}
     </button>
   );

@@ -23,7 +23,7 @@ export class AppointmentsController {
     return this.appointmentsService.create(dto, user);
   }
 
-  @Roles(Role.ADMIN, Role.DOCTOR, Role.PATIENT)
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
   @Get()
   @ApiOperation({ summary: 'List appointments scoped to user role' })
   async findAll(@CurrentUser() user: any) {

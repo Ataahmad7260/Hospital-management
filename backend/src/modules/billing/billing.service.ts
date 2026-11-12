@@ -54,7 +54,7 @@ export class BillingService {
     });
   }
 
-  async recordPayment(id: string, paidAmount: number) {
+  async recordPayment(id: string, paidAmount: number, paymentMethod?: PaymentMethod) {
     const bill = await this.prisma.bill.findUnique({ where: { id } });
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
 
@@ -67,6 +67,7 @@ export class BillingService {
         paidAmount: newPaid,
         status: isFull ? BillStatus.PAID : BillStatus.PARTIALLY_PAID,
         paidAt: isFull ? new Date() : bill.paidAt,
+        ...(paymentMethod && { paymentMethod }),
       },
     });
   }

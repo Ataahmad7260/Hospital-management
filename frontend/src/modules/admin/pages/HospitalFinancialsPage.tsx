@@ -86,7 +86,7 @@ export const HospitalFinancialsPage: React.FC = () => {
   };
 
   return (
-    <div className="portal-page">
+    <div className="space-y-6 w-full">
       <Card
         title="Hospital Invoicing & Revenue Ledger"
         subtitle="Itemized billing records and payment reconciliation"

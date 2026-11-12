@@ -10,6 +10,10 @@ import type {
   Bill,
   HealthStatus,
   Role,
+  AdmitPatientPayload,
+  PatientOverviewRecord,
+  DailyAdmissionsStats,
+  PageTrackingStats,
 } from '../types';
 
 const API_BASE_URL = '/api/v1';
@@ -135,6 +139,21 @@ class ApiService {
     return this.request<Patient>(`/patients/${id}`);
   }
 
+  admitPatient(data: AdmitPatientPayload): Promise<{ message: string; admission: Appointment }> {
+    return this.request<{ message: string; admission: Appointment }>('/patients/admit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  getPatientOverview(): Promise<PatientOverviewRecord[]> {
+    return this.request<PatientOverviewRecord[]>('/patients/overview');
+  }
+
+  getDailyAdmissionsStats(): Promise<DailyAdmissionsStats> {
+    return this.request<DailyAdmissionsStats>('/patients/admissions/daily-stats');
+  }
+
   // Appointments
   getAppointments(): Promise<Appointment[]> {
     return this.request<Appointment[]>('/appointments');
@@ -238,10 +257,34 @@ class ApiService {
     });
   }
 
-  recordPayment(id: string, paidAmount: number): Promise<Bill> {
+  recordPayment(id: string, paidAmount: number, paymentMethod?: string): Promise<Bill> {
     return this.request<Bill>(`/billing/${id}/pay`, {
       method: 'PATCH',
-      body: JSON.stringify({ paidAmount }),
+      body: JSON.stringify({ paidAmount, paymentMethod }),
+    });
+  }
+
+  // Express Page Tracking & Telemetry
+  recordPageHit(data: {
+    pageUrl: string;
+    pageTitle?: string;
+    userRole?: string;
+    userId?: string;
+    referrer?: string;
+  }): Promise<{ success: boolean; recordedAt: string; pageUrl: string }> {
+    return this.request<{ success: boolean; recordedAt: string; pageUrl: string }>('/page-tracking/hit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  getPageTrackingStats(): Promise<PageTrackingStats> {
+    return this.request<PageTrackingStats>('/page-tracking/stats');
+  }
+
+  clearPageTrackingStats(): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/page-tracking/clear', {
+      method: 'DELETE',
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -9,6 +9,8 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { PageTrackingModule } from './modules/page-tracking/page-tracking.module';
+import { PageTrackingMiddleware } from './modules/page-tracking/page-tracking.middleware';
 import { AppController } from './app.controller';
 
 @Module({
@@ -26,7 +28,13 @@ import { AppController } from './app.controller';
     PrescriptionsModule,
     PharmacyModule,
     BillingModule,
+    PageTrackingModule,
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PageTrackingMiddleware).forRoutes('*');
+  }
+}
+

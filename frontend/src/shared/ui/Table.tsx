@@ -1,22 +1,29 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export const Table: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = '',
 }) => {
   return (
-    <div className={`overflow-x-auto rounded-lg border border-mono-800 bg-mono-950 ${className}`}>
-      <table className="w-full text-left text-xs border-collapse">{children}</table>
+    <div className={cn('relative w-full overflow-auto rounded-xl border border-border bg-card shadow-sm', className)}>
+      <table className="w-full text-left text-sm border-collapse">{children}</table>
     </div>
   );
 };
 
-export const TableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <thead>{children}</thead>;
+export const TableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = '',
+}) => {
+  return <thead className={cn('border-b border-border bg-muted/40', className)}>{children}</thead>;
 };
 
-export const TableBody: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <tbody className="divide-y divide-mono-800">{children}</tbody>;
+export const TableBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = '',
+}) => {
+  return <tbody className={cn('divide-y divide-border [&_tr:last-child]:border-0', className)}>{children}</tbody>;
 };
 
 export const TableRow: React.FC<{
@@ -26,7 +33,11 @@ export const TableRow: React.FC<{
 }> = ({ children, className = '', onClick }) => {
   return (
     <tr
-      className={`border-b border-mono-800 hover:bg-mono-850 transition-colors ${className}`}
+      className={cn(
+        'border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+        onClick && 'cursor-pointer',
+        className
+      )}
       onClick={onClick}
     >
       {children}
@@ -40,7 +51,10 @@ export const TableHead: React.FC<{ children: React.ReactNode; className?: string
 }) => {
   return (
     <th
-      className={`px-4 py-3 bg-mono-950 text-mono-400 font-semibold text-[0.7rem] uppercase tracking-wider border-b border-mono-800 whitespace-nowrap ${className}`}
+      className={cn(
+        'h-10 px-4 text-left align-middle font-medium text-xs uppercase tracking-wider text-muted-foreground whitespace-nowrap',
+        className
+      )}
     >
       {children}
     </th>
@@ -53,7 +67,7 @@ export const TableCell: React.FC<{
   colSpan?: number;
 }> = ({ children, className = '', colSpan }) => {
   return (
-    <td className={`px-4 py-3 text-mono-200 ${className}`} colSpan={colSpan}>
+    <td className={cn('p-4 align-middle text-foreground', className)} colSpan={colSpan}>
       {children}
     </td>
   );

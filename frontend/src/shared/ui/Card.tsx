@@ -1,9 +1,10 @@
-import React from 'react';
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 export interface CardProps {
   children: React.ReactNode;
-  title?: string;
-  subtitle?: string;
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
   action?: React.ReactNode;
   icon?: React.ReactNode;
   className?: string;
@@ -18,17 +19,22 @@ export const Card: React.FC<CardProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-mono-900 border border-mono-800 rounded-xl p-5 hover:border-mono-700 transition-colors ${className}`}>
+    <div
+      className={cn(
+        'bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors',
+        className
+      )}
+    >
       {(title || action) && (
         <div className="flex items-start justify-between mb-4 gap-4">
           <div>
             {title && (
-              <div className="text-base font-bold text-white flex items-center gap-2">
-                {icon && <span className="text-mono-400">{icon}</span>}
+              <div className="text-base font-semibold text-foreground flex items-center gap-2">
+                {icon && <span className="text-primary">{icon}</span>}
                 <span>{title}</span>
               </div>
             )}
-            {subtitle && <div className="text-xs text-mono-400 mt-0.5">{subtitle}</div>}
+            {subtitle && <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>}
           </div>
           {action && <div className="shrink-0">{action}</div>}
         </div>
@@ -43,17 +49,27 @@ export interface KPICardProps {
   value: string | number;
   subtext?: string;
   icon?: React.ReactNode;
+  className?: string;
 }
 
-export const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, icon }) => {
+export const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, icon, className = '' }) => {
   return (
-    <div className="bg-mono-900 border border-mono-800 rounded-xl p-5 hover:border-mono-700 transition-colors flex flex-col gap-2">
-      <div className="flex items-center justify-between text-mono-400 text-xs font-semibold uppercase tracking-wider">
-        <span>{label}</span>
-        {icon && <span className="text-mono-400">{icon}</span>}
+    <div
+      className={cn(
+        'bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors flex flex-col justify-between gap-3',
+        className
+      )}
+    >
+      <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+        <span className="truncate pr-2">{label}</span>
+        {icon && (
+          <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+            {icon}
+          </div>
+        )}
       </div>
-      <div className="text-3xl font-bold font-mono text-white tracking-tight">{value}</div>
-      {subtext && <div className="text-xs text-mono-500">{subtext}</div>}
+      <div className="text-3xl font-bold font-mono text-foreground tracking-tight">{value}</div>
+      {subtext && <div className="text-xs text-muted-foreground font-sans">{subtext}</div>}
     </div>
   );
 };

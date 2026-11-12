@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -34,16 +35,18 @@ export const Modal: React.FC<ModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-mono-950 border border-mono-700 rounded-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className={cn(
+          'bg-card text-card-foreground border border-border rounded-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto'
+        )}
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-bold text-white">{title}</h2>
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground tracking-tight">{title}</h2>
           <button
-            className="p-1 rounded text-mono-400 hover:text-white hover:bg-mono-850 cursor-pointer transition-colors"
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary cursor-pointer transition-colors"
             onClick={onClose}
             aria-label="Close modal"
           >

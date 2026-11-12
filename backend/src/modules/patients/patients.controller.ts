@@ -1,11 +1,13 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
+import { AdmitPatientDto } from './dto/admit-patient.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Patients')
 @ApiBearerAuth()
@@ -13,6 +15,40 @@ import { Role } from '../../common/enums/role.enum';
 @Controller('patients')
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
+
+  /**
+   * Admit New Patient by writing name, condition, assigning doctor, and vitals.
+   * Immediately routes case into the Doctor Portal queue.
+   */
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
+  @Post('admit')
+  @ApiOperation({ summary: 'Admit new patient with name & symptoms, route to Doctor consultation queue' })
+  @ApiResponse({ status: 201, description: 'Patient admitted successfully' })
+  async admitPatient(@Body() dto: AdmitPatientDto, @CurrentUser() user: any) {
+    return this.patientsService.admitPatient(dto, user);
+  }
+
+  /**
+   * Master Patient Overview:
+   * Returns all patient entries organized by date, with doctor conducted, medicines prescribed, and money paid.
+   */
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
+  @Get('overview')
+  @ApiOperation({ summary: 'Patient Overview: Get all patient entries sorted by date with doctor, medicines, and billing' })
+  async getOverview(@CurrentUser() user: any) {
+    return this.patientsService.getOverview(user);
+  }
+
+  /**
+   * Daily Patient Admissions Statistics:
+   * Aggregates admissions by day for the dashboard graph.
+   */
+  @Public()
+  @Get('admissions/daily-stats')
+  @ApiOperation({ summary: 'Dashboard: Get daily patient admission counts for graph plotting' })
+  async getDailyAdmissionStats() {
+    return this.patientsService.getDailyAdmissionStats();
+  }
 
   /**
    * Restricted strictly to authorized administrative and clinical roles.
@@ -38,9 +74,6 @@ export class PatientsController {
 
   /**
    * Get patient medical profile by ID.
-   * Admin: authorized for all patients.
-   * Doctor: authorized only for patients they have appointments/records with.
-   * Patient: authorized only for their own patient profile.
    */
   @Roles(Role.ADMIN, Role.DOCTOR, Role.PATIENT)
   @Get(':id')

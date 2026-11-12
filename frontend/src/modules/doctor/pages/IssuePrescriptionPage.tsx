@@ -90,7 +90,7 @@ export const IssuePrescriptionPage: React.FC = () => {
   };
 
   return (
-    <div className="portal-page">
+    <div className="space-y-6 w-full">
       <Card
         title="Digital Prescription Registry"
         subtitle="Issue electronic prescriptions and view dispensary fulfillment status"

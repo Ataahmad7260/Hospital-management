@@ -9,13 +9,17 @@ export interface ToastProps {
 export const Toast: React.FC<ToastProps> = ({ message, isError }) => {
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-xs font-semibold shadow-2xl transition-all duration-200 ${
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-xs font-semibold shadow-2xl transition-all duration-200 border ${
         isError
-          ? 'bg-mono-800 text-white border border-mono-600'
-          : 'bg-white text-black'
+          ? 'bg-destructive text-destructive-foreground border-destructive/80 shadow-destructive/20'
+          : 'bg-card text-foreground border-border shadow-lg'
       }`}
     >
-      {isError ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}
+      {isError ? (
+        <AlertCircle size={16} className="text-destructive-foreground shrink-0" />
+      ) : (
+        <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+      )}
       <span>{message}</span>
     </div>
   );

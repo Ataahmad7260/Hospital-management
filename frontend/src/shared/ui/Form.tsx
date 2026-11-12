@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export const FormGroup: React.FC<{
   label?: string;
@@ -7,25 +8,26 @@ export const FormGroup: React.FC<{
   className?: string;
 }> = ({ label, error, children, className = '' }) => {
   return (
-    <div className={`mb-3.5 flex flex-col gap-1.5 ${className}`}>
+    <div className={cn('space-y-1.5 mb-4', className)}>
       {label && (
-        <label className="text-[0.7rem] font-semibold text-mono-400 uppercase tracking-wider font-mono">
+        <label className="text-xs font-medium text-foreground tracking-wide">
           {label}
         </label>
       )}
       {children}
-      {error && <span className="text-xs text-mono-400 italic">{error}</span>}
+      {error && <span className="text-xs text-destructive font-medium">{error}</span>}
     </div>
   );
 };
 
-export const FormRow: React.FC<{ children: React.ReactNode; columns?: number }> = ({
+export const FormRow: React.FC<{ children: React.ReactNode; columns?: number; className?: string }> = ({
   children,
   columns = 2,
+  className = '',
 }) => {
   return (
     <div
-      className="grid gap-3"
+      className={cn('grid gap-4', className)}
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
       {children}

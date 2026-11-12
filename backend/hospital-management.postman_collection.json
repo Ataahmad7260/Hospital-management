@@ -1,0 +1,861 @@
+{
+  "info": {
+    "_postman_id": "hospital-mgmt-api-v1",
+    "name": "Hospital Management System API",
+    "description": "Ready-to-use Postman Collection for testing all backend endpoints of the Hospital Management System with Role-Based Access Control (Admin, Doctor, Pharmacist, Patient).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login as Admin (auto-saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.environment.set('token', json.data.accessToken);",
+                  "        pm.environment.set('targetUserId', json.data.user.id);",
+                  "        console.log('✅ Logged in as ADMIN. Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Chief Administrator and automatically updates the environment variable {{token}}."
+          }
+        },
+        {
+          "name": "Login as Doctor (auto-saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.environment.set('token', json.data.accessToken);",
+                  "        console.log('✅ Logged in as DOCTOR. Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{doctorEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Dr. Sarah Smith (Cardiologist) and automatically updates the environment variable {{token}}."
+          }
+        },
+        {
+          "name": "Login as Pharmacist (auto-saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.environment.set('token', json.data.accessToken);",
+                  "        console.log('✅ Logged in as PHARMACIST. Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{pharmacistEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Pharmacist Alex Turner and automatically updates the environment variable {{token}}."
+          }
+        },
+        {
+          "name": "Login as Patient (auto-saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.environment.set('token', json.data.accessToken);",
+                  "        console.log('✅ Logged in as PATIENT. Saved token to {{token}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patientEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates as Jane Doe (Patient) and automatically updates the environment variable {{token}}."
+          }
+        },
+        {
+          "name": "Register New User",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"new.patient@example.com\",\n  \"password\": \"Hospital123!\",\n  \"firstName\": \"Robert\",\n  \"lastName\": \"Frost\",\n  \"role\": \"PATIENT\",\n  \"phoneNumber\": \"+1-555-9988\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registers a new user in the hospital management database."
+          }
+        },
+        {
+          "name": "Get Current Authenticated Profile (/auth/me)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the profile and role details of whoever is currently authenticated with {{token}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. System Health",
+      "item": [
+        {
+          "name": "API Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Checks if the backend API and database connection are operational."
+          }
+        },
+        {
+          "name": "API Welcome / Info",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "Root endpoint information."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Users (Admin Only)",
+      "item": [
+        {
+          "name": "List All Users (Role: ADMIN)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "DOCTOR",
+                  "disabled": true,
+                  "description": "Filter by role: ADMIN, DOCTOR, PATIENT, PHARMACIST"
+                }
+              ]
+            },
+            "description": "Admin only: Returns all registered users with profiles."
+          }
+        },
+        {
+          "name": "Get User By ID (Role: ADMIN, DOCTOR)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{targetUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{targetUserId}}"
+              ]
+            },
+            "description": "Get detailed profile of a specific user."
+          }
+        },
+        {
+          "name": "Toggle User Active Status (Role: ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{targetUserId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{targetUserId}}",
+                "status"
+              ]
+            },
+            "description": "Admin only: Activates or deactivates a user account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Doctors",
+      "item": [
+        {
+          "name": "List All Doctors (Public / All)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/doctors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "doctors"
+              ]
+            },
+            "description": "Lists all doctors, departments, specializations, and consult fees."
+          }
+        },
+        {
+          "name": "Get Doctor By ID (Role: ADMIN, DOCTOR, PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/doctors/{{targetDoctorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "doctors",
+                "{{targetDoctorId}}"
+              ]
+            },
+            "description": "Returns detailed doctor information, available days, and room number."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Patients",
+      "item": [
+        {
+          "name": "List Patients (Role: ADMIN, DOCTOR)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/patients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "description": "Restricted strictly to Admin and Doctor. Returns patient list scoped to authorization."
+          }
+        },
+        {
+          "name": "Get My Patient Profile (/patients/me) (Role: PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/patients/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "me"
+              ]
+            },
+            "description": "Patient only: Returns authenticated patient's own profile, history, appointments, and bills."
+          }
+        },
+        {
+          "name": "Get Patient By ID (Role: ADMIN, DOCTOR, PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{targetPatientId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{targetPatientId}}"
+              ]
+            },
+            "description": "Returns medical records, vitals, allergies, and contact details for a specific patient ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Appointments",
+      "item": [
+        {
+          "name": "List Appointments (Role: ADMIN, DOCTOR, PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appointments"
+              ]
+            },
+            "description": "Lists appointments automatically scoped by caller's role."
+          }
+        },
+        {
+          "name": "Book Appointment (Role: ADMIN, PATIENT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('targetAppointmentId', json.data.id);",
+                  "        console.log('✅ Created Appointment ID: ' + json.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctorId\": \"{{targetDoctorProfileId}}\",\n  \"patientId\": \"{{targetPatientProfileId}}\",\n  \"appointmentDate\": \"2026-11-20T10:00:00.000Z\",\n  \"timeSlot\": \"10:00 - 10:30 AM\",\n  \"reason\": \"Routine cardiovascular checkup and blood pressure review\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appointments"
+              ]
+            },
+            "description": "Books a consultation appointment between a patient and a doctor."
+          }
+        },
+        {
+          "name": "Update Appointment Status (Role: ADMIN, DOCTOR)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments/{{targetAppointmentId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "appointments",
+                "{{targetAppointmentId}}",
+                "status"
+              ]
+            },
+            "description": "Status options: SCHEDULED, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Prescriptions",
+      "item": [
+        {
+          "name": "List Prescriptions (Role: ADMIN, DOCTOR, PHARMACIST, PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions"
+              ]
+            },
+            "description": "Lists digital prescriptions scoped according to the caller's role."
+          }
+        },
+        {
+          "name": "Create Prescription (Role: DOCTOR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('targetPrescriptionId', json.data.id);",
+                  "        console.log('✅ Created Prescription ID: ' + json.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{targetPatientProfileId}}\",\n  \"doctorId\": \"{{targetDoctorProfileId}}\",\n  \"doctorNotes\": \"Take medications on time. Drink plenty of fluids.\",\n  \"items\": [\n    {\n      \"medicineName\": \"Amoxicillin 500mg\",\n      \"dosage\": \"500mg\",\n      \"frequency\": \"1-0-1 (twice daily)\",\n      \"durationDays\": 7,\n      \"instructions\": \"Take after meals with warm water\"\n    },\n    {\n      \"medicineName\": \"Paracetamol 650mg\",\n      \"dosage\": \"650mg\",\n      \"frequency\": \"As needed for fever (SOS)\",\n      \"durationDays\": 3,\n      \"instructions\": \"Do not exceed 3 tablets in 24 hours\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions"
+              ]
+            },
+            "description": "Doctor only: Generates a new prescription with medications."
+          }
+        },
+        {
+          "name": "Dispense Prescription (Role: PHARMACIST)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pharmacistId\": \"{{pharmacistProfileId}}\",\n  \"itemsDispensed\": [\n    \"Amoxicillin 500mg\",\n    \"Paracetamol 650mg\"\n  ],\n  \"notes\": \"Dispensed full course in sealed packaging.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/{{targetPrescriptionId}}/dispense",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "prescriptions",
+                "{{targetPrescriptionId}}",
+                "dispense"
+              ]
+            },
+            "description": "Pharmacist only: Marks a prescription as dispensed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Pharmacy & Inventory",
+      "item": [
+        {
+          "name": "List All Medicines (Role: ADMIN, DOCTOR, PHARMACIST)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/pharmacy/medicines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pharmacy",
+                "medicines"
+              ]
+            },
+            "description": "Lists all pharmacy stock inventory with prices, batch numbers, and quantities."
+          }
+        },
+        {
+          "name": "Check Low Stock Medicines (Role: ADMIN, PHARMACIST)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/pharmacy/medicines/low-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pharmacy",
+                "medicines",
+                "low-stock"
+              ]
+            },
+            "description": "Returns medicines whose stockQuantity is below reorderLevel."
+          }
+        },
+        {
+          "name": "Add New Medicine (Role: ADMIN, PHARMACIST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('targetMedicineId', json.data.id);",
+                  "        console.log('✅ Created Medicine ID: ' + json.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ibuprofen 400mg\",\n  \"genericName\": \"Ibuprofen\",\n  \"category\": \"Tablet\",\n  \"manufacturer\": \"Abbott Healthcare\",\n  \"batchNumber\": \"IBU-2026-88\",\n  \"stockQuantity\": 300,\n  \"reorderLevel\": 50,\n  \"unitPrice\": 0.45,\n  \"expiryDate\": \"2028-10-31T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pharmacy/medicines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pharmacy",
+                "medicines"
+              ]
+            },
+            "description": "Adds a new pharmaceutical item into hospital inventory."
+          }
+        },
+        {
+          "name": "Adjust Stock Quantity (Role: ADMIN, PHARMACIST)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantityDelta\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pharmacy/medicines/{{targetMedicineId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pharmacy",
+                "medicines",
+                "{{targetMedicineId}}",
+                "stock"
+              ]
+            },
+            "description": "Updates stock quantity (positive number to restock, negative to reduce)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Billing & Invoicing",
+      "item": [
+        {
+          "name": "List Invoices (Role: ADMIN, PATIENT)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/billing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing"
+              ]
+            },
+            "description": "Admin: sees all hospital invoices. Patient: sees own invoices."
+          }
+        },
+        {
+          "name": "Create Billing Invoice (Role: ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('targetBillId', json.data.id);",
+                  "        console.log('✅ Created Bill ID: ' + json.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{targetPatientProfileId}}\",\n  \"items\": [\n    {\n      \"description\": \"Consultation Fee - Cardiology\",\n      \"quantity\": 1,\n      \"unitPrice\": 75,\n      \"total\": 75\n    },\n    {\n      \"description\": \"Pharmacy Medication - Amoxicillin 500mg\",\n      \"quantity\": 2,\n      \"unitPrice\": 12.5,\n      \"total\": 25\n    }\n  ],\n  \"subtotal\": 100,\n  \"taxAmount\": 5,\n  \"discountAmount\": 0,\n  \"paymentMethod\": \"CASH\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/billing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing"
+              ]
+            },
+            "description": "Admin only: Generates an invoice for medical services and medications."
+          }
+        },
+        {
+          "name": "Record Payment (Role: ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paidAmount\": 105\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/billing/{{targetBillId}}/pay",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "billing",
+                "{{targetBillId}}",
+                "pay"
+              ]
+            },
+            "description": "Records payment against an unpaid or partially paid invoice."
+          }
+        }
+      ]
+    }
+  ]
+}

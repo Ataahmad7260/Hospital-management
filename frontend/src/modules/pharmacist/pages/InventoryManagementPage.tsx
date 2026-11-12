@@ -76,7 +76,7 @@ export const InventoryManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="portal-page">
+    <div className="space-y-6 w-full">
       <Card
         title="Pharmacy Inventory & Batch Control"
         subtitle="Catalog medicines, track stock levels, and set automatic reorder thresholds"
@@ -108,32 +108,31 @@ export const InventoryManagementPage: React.FC = () => {
             {medicines.map((med) => (
               <TableRow key={med.id}>
                 <TableCell>
-                  <div className="font-semibold text-primary">{med.name}</div>
-                  <div className="text-muted text-xs">{med.genericName}</div>
+                  <div className="font-semibold text-foreground">{med.name}</div>
+                  <div className="text-muted-foreground text-xs">{med.genericName}</div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">{med.category}</Badge>
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-xs">{med.batchNumber}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{med.batchNumber}</span>
                 </TableCell>
                 <TableCell>
-                  <span
-                    className={`badge ${
-                      med.stockQuantity <= med.reorderLevel ? 'badge-white' : 'badge-outline'
-                    }`}
+                  <Badge
+                    variant={med.stockQuantity <= med.reorderLevel ? 'solid' : 'outline'}
+                    className={med.stockQuantity <= med.reorderLevel ? 'bg-destructive text-destructive-foreground' : ''}
                   >
                     {med.stockQuantity} units
-                  </span>
+                  </Badge>
                 </TableCell>
-                <TableCell className="font-mono font-semibold text-primary">
+                <TableCell className="font-mono font-semibold text-foreground">
                   ${med.unitPrice.toFixed(2)}
                 </TableCell>
-                <TableCell className="font-mono text-muted text-xs">
+                <TableCell className="font-mono text-muted-foreground text-xs">
                   {new Date(med.expiryDate).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <div className="flex-row-gap">
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="secondary"
                       size="sm"

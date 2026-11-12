@@ -1,18 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, FileText, CreditCard, Stethoscope, Plus, HeartPulse, ShieldAlert, Phone } from 'lucide-react';
 import {
   Card,
-  KPICard,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
+import {
   Table,
   TableHeader,
   TableBody,
   TableRow,
   TableHead,
   TableCell,
-  StatusPill,
-  Button,
-  Badge,
-} from '../../../shared/ui';
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Calendar,
+  FileText,
+  CreditCard,
+  Stethoscope,
+  Plus,
+  HeartPulse,
+  ShieldAlert,
+  Phone,
+  CalendarX,
+  ExternalLink,
+} from 'lucide-react';
+import { EmptyState } from '../../../shared/ui';
 import { api } from '../../../shared/api';
 import type { Appointment, Prescription, Bill, Doctor, Patient } from '../../../shared/types';
 
@@ -26,12 +43,14 @@ export const PatientDashboard: React.FC<{
   const [bills, setBills] = useState<Bill[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [myProfile, setMyProfile] = useState<Patient | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const [apts, rxList, bls, docs, profile] = await Promise.all([
         api.getAppointments(),
@@ -47,33 +66,75 @@ export const PatientDashboard: React.FC<{
       if (profile) setMyProfile(profile);
     } catch (e) {
       console.error(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   const nextAppointment = appointments[0];
   const pendingBills = bills.filter((b) => b.status !== 'PAID');
-  const outstandingTotal = pendingBills.reduce((acc, b) => acc + (b.totalAmount - (b.paidAmount || 0)), 0);
+  const outstandingTotal = pendingBills.reduce(
+    (acc, b) => acc + (b.totalAmount - (b.paidAmount || 0)),
+    0
+  );
+
+  const getStatusBadge = (status: string) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'CONFIRMED' || s === 'COMPLETED' || s === 'DISPENSED' || s === 'PAID') {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1.5 uppercase font-mono text-[0.68rem] border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-semibold"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          {status}
+        </Badge>
+      );
+    }
+    if (s === 'PENDING' || s === 'SCHEDULED' || s === 'ISSUED') {
+      return (
+        <Badge
+          variant="outline"
+          className="gap-1.5 uppercase font-mono text-[0.68rem] border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+          {status}
+        </Badge>
+      );
+    }
+    return (
+      <Badge
+        variant="outline"
+        className="gap-1.5 uppercase font-mono text-[0.68rem] border-border bg-secondary text-muted-foreground font-semibold"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+        {status}
+      </Badge>
+    );
+  };
 
   return (
-    <div className="portal-page">
-      {/* Patient Own Profile Header Banner */}
+    <div className="space-y-6 w-full">
+      {/* Patient Profile Header Banner */}
       {myProfile && (
-        <div className="bg-mono-900 border border-mono-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-mono-800 border border-mono-700 flex items-center justify-center font-mono font-bold text-sm text-white">
-              {myProfile.user?.firstName?.[0]}
-              {myProfile.user?.lastName?.[0]}
-            </div>
+        <div className="bg-card text-card-foreground border border-border rounded-xl p-6 flex flex-wrap items-center justify-between gap-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            <Avatar className="w-12 h-12 border border-border">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                {myProfile.user?.firstName?.[0]}
+                {myProfile.user?.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
             <div>
-              <div className="text-sm font-bold text-white flex items-center gap-2">
+              <div className="text-base font-semibold text-foreground flex items-center gap-2.5">
                 <span>
                   {myProfile.user?.firstName} {myProfile.user?.lastName}
                 </span>
-                <Badge variant="outline" size="sm">
-                  Patient File #{myProfile.id.slice(-6).toUpperCase()}
+                <Badge variant="outline" className="font-mono text-xs">
+                  PAT-{myProfile.id.slice(0, 8).toUpperCase()}
                 </Badge>
               </div>
-              <div className="text-xs text-mono-400 font-mono flex items-center gap-2 mt-0.5">
+              <div className="text-xs text-muted-foreground font-mono flex items-center gap-2 mt-1">
                 <span>Blood: {myProfile.bloodGroup || 'UNKNOWN'}</span>
                 <span>&bull;</span>
                 <span>Gender: {myProfile.gender || 'OTHER'}</span>
@@ -81,22 +142,22 @@ export const PatientDashboard: React.FC<{
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
             {myProfile.emergencyContactPhone && (
-              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
-                <Phone size={12} className="text-mono-400" />
+              <div className="flex items-center gap-2 bg-secondary px-3.5 py-1.5 rounded-md border border-border text-foreground">
+                <Phone size={14} className="text-muted-foreground" />
                 <span>ICE: {myProfile.emergencyContactPhone}</span>
               </div>
             )}
             {myProfile.allergies && myProfile.allergies.length > 0 && (
-              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
-                <ShieldAlert size={12} className="text-mono-400" />
+              <div className="flex items-center gap-2 bg-amber-500/10 text-amber-400 px-3.5 py-1.5 rounded-md border border-amber-500/20">
+                <ShieldAlert size={14} />
                 <span>Allergies: {myProfile.allergies.join(', ')}</span>
               </div>
             )}
             {myProfile.chronicDiseases && myProfile.chronicDiseases.length > 0 && (
-              <div className="flex items-center gap-1.5 text-mono-300 bg-mono-950 px-2.5 py-1 rounded border border-mono-800">
-                <HeartPulse size={12} className="text-mono-400" />
+              <div className="flex items-center gap-2 bg-rose-500/10 text-rose-400 px-3.5 py-1.5 rounded-md border border-rose-500/20">
+                <HeartPulse size={14} />
                 <span>Regimen: {myProfile.chronicDiseases.join(', ')}</span>
               </div>
             )}
@@ -104,125 +165,237 @@ export const PatientDashboard: React.FC<{
         </div>
       )}
 
-      {/* KPI Grid */}
-      <div className="kpi-grid">
-        <KPICard
-          label="My Scheduled Visits"
-          value={appointments.length}
-          subtext={nextAppointment ? `Next: ${nextAppointment.timeSlot}` : 'No upcoming visits'}
-          icon={<Calendar size={16} />}
-        />
-        <KPICard
-          label="Prescriptions on File"
-          value={prescriptions.length}
-          subtext="Active medical regimens"
-          icon={<FileText size={16} />}
-        />
-        <KPICard
-          label="Outstanding Balance"
-          value={`$${outstandingTotal.toFixed(2)}`}
-          subtext={`${pendingBills.length} unpaid invoice(s)`}
-          icon={<CreditCard size={16} />}
-        />
-        <KPICard
-          label="Hospital Specialists"
-          value={doctors.length}
-          subtext="Available for consultation"
-          icon={<Stethoscope size={16} />}
-        />
+      {/* Top Metric Cards (4 Cards adapting completely to shadcn theme tokens) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Metric 1: Scheduled Visits */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Scheduled Visits
+            </CardTitle>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+              <Calendar size={16} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold font-mono text-foreground tracking-tight">
+              {appointments.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">
+              {nextAppointment ? `Next: ${nextAppointment.timeSlot}` : 'No upcoming visits'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Metric 2: Prescriptions */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Prescriptions
+            </CardTitle>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+              <FileText size={16} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold font-mono text-foreground tracking-tight">
+              {prescriptions.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">
+              Active medical regimens on file
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Metric 3: Outstanding Balance */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Outstanding Balance
+            </CardTitle>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+              <CreditCard size={16} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold font-mono text-foreground tracking-tight">
+              ${outstandingTotal.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">
+              {pendingBills.length} unpaid hospital invoice(s)
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Metric 4: Specialists */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Specialists
+            </CardTitle>
+            <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+              <Stethoscope size={16} />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold font-mono text-foreground tracking-tight">
+              {doctors.length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 truncate">
+              Specialist physicians on active duty
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid-2-col">
+      {/* Two Column Layout: Clinical Consultations & Prescriptions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Next Visit / Upcoming appointments */}
-        <Card
-          title="My Clinical Consultations"
-          subtitle="Scheduled doctor appointments"
-          icon={<Calendar size={18} />}
-          action={
-            onBookAppointment && (
-              <Button variant="primary" size="sm" icon={<Plus size={13} />} onClick={onBookAppointment}>
-                Book Visit
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+                <Calendar size={16} />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground">
+                  Clinical Consultations
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  Scheduled physician appointments
+                </CardDescription>
+              </div>
+            </div>
+            {onBookAppointment && (
+              <Button size="sm" onClick={onBookAppointment} className="gap-1.5 cursor-pointer">
+                <Plus size={14} />
+                <span>Book Visit</span>
               </Button>
-            )
-          }
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time Slot</TableHead>
-                <TableHead>Physician</TableHead>
-                <TableHead>Visit Purpose</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {appointments.slice(0, 5).map((apt) => (
-                <TableRow key={apt.id}>
-                  <TableCell>
-                    <div className="font-semibold text-primary">{apt.timeSlot}</div>
-                    <div className="font-mono text-muted text-xs">
-                      {new Date(apt.appointmentDate).toDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {apt.doctor?.user ? `Dr. ${apt.doctor.user.lastName}` : 'Physician'}
-                  </TableCell>
-                  <TableCell>{apt.reason || 'General Consultation'}</TableCell>
-                  <TableCell>
-                    <StatusPill status={apt.status} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {appointments.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted py-8">
-                    You have no scheduled appointments
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+            )}
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="p-8 text-center text-xs text-muted-foreground font-mono">
+                Loading clinical consultations...
+              </div>
+            ) : appointments.length === 0 ? (
+              <div className="p-6">
+                <EmptyState
+                  icon={<CalendarX size={24} />}
+                  title="No Scheduled Visits"
+                  description="You currently have no doctor consultations scheduled. Pick a specialist to schedule a visit."
+                  action={
+                    onBookAppointment && (
+                      <Button size="sm" onClick={onBookAppointment} className="gap-1.5 cursor-pointer">
+                        <Plus size={14} />
+                        <span>Book Visit</span>
+                      </Button>
+                    )
+                  }
+                />
+              </div>
+            ) : (
+              <Table className="border-0 rounded-none shadow-none">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Time Slot</TableHead>
+                    <TableHead className="text-xs">Physician</TableHead>
+                    <TableHead className="text-xs">Purpose</TableHead>
+                    <TableHead className="text-xs text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appointments.slice(0, 5).map((apt) => (
+                    <TableRow key={apt.id}>
+                      <TableCell className="py-3.5">
+                        <div className="font-semibold text-foreground text-xs">{apt.timeSlot}</div>
+                        <div className="font-mono text-[0.68rem] text-muted-foreground mt-0.5">
+                          {new Date(apt.appointmentDate).toDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3.5 text-xs text-foreground font-medium">
+                        {apt.doctor?.user ? `Dr. ${apt.doctor.user.lastName}` : 'Physician'}
+                      </TableCell>
+                      <TableCell className="py-3.5 text-xs text-muted-foreground">
+                        {apt.reason || 'General Consultation'}
+                      </TableCell>
+                      <TableCell className="py-3.5 text-right">
+                        {getStatusBadge(apt.status)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
         </Card>
 
         {/* Active Prescriptions */}
-        <Card
-          title="My Medications & Prescriptions"
-          subtitle="Instructions from your physician"
-          icon={<FileText size={18} />}
-          action={
-            onViewPrescriptions && (
-              <Button variant="outline" size="sm" onClick={onViewPrescriptions}>
-                View All
-              </Button>
-            )
-          }
-        >
-          <div className="space-y-3">
-            {prescriptions.slice(0, 4).map((rx) => (
-              <div key={rx.id} className="list-item-card">
-                <div>
-                  <div className="font-mono font-semibold text-primary text-sm">
-                    {rx.prescriptionNo}
-                  </div>
-                  <div className="text-muted text-xs">
-                    By Dr. {rx.doctor?.user?.lastName || 'Consultant'} &bull; Issued{' '}
-                    {new Date(rx.createdAt).toLocaleDateString()}
-                  </div>
-                  <div className="text-xs text-primary font-medium mt-1">
-                    {rx.items?.map((it) => `${it.medicineName} (${it.frequency})`).join(', ')}
-                  </div>
-                </div>
-                <div>
-                  <StatusPill status={rx.status} />
-                </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+                <FileText size={16} />
               </div>
-            ))}
-            {prescriptions.length === 0 && (
-              <div className="text-center text-muted py-8">No prescriptions on record</div>
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground">
+                  My Medications & Regimens
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  Prescription regimens from your physician
+                </CardDescription>
+              </div>
+            </div>
+            {onViewPrescriptions && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onViewPrescriptions}
+                className="cursor-pointer gap-1.5"
+              >
+                <span>View All</span>
+                <ExternalLink size={13} />
+              </Button>
             )}
-          </div>
+          </CardHeader>
+
+          <CardContent className="p-6">
+            {prescriptions.length === 0 ? (
+              <EmptyState
+                icon={<FileText size={24} />}
+                title="No Prescriptions on Record"
+                description="Your medical record currently contains no prescriptions. Issued regimens will be displayed here."
+              />
+            ) : (
+              <div className="space-y-3">
+                {prescriptions.slice(0, 4).map((rx) => (
+                  <div
+                    key={rx.id}
+                    className="p-4 rounded-xl border border-border bg-card/60 hover:bg-muted/40 transition-colors flex items-center justify-between gap-4 shadow-xs"
+                  >
+                    <div>
+                      <div className="font-mono font-bold text-primary text-xs">
+                        {rx.prescriptionNo}
+                      </div>
+                      <div className="text-[0.7rem] text-muted-foreground mt-0.5">
+                        Dr. {rx.doctor?.user?.lastName || 'Consultant'} &bull; Issued{' '}
+                        {new Date(rx.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-foreground font-medium mt-1.5">
+                        {rx.items?.map((it) => `${it.medicineName} (${it.frequency})`).join(', ')}
+                      </div>
+                    </div>
+                    <div>{getStatusBadge(rx.status)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>
   );
 };
+
+export default PatientDashboard;

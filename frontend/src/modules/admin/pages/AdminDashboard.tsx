@@ -39,9 +39,9 @@ export const AdminDashboard: React.FC = () => {
   const lowStockMedicines = medicines.filter((m) => m.stockQuantity <= m.reorderLevel).length;
 
   return (
-    <div className="portal-page">
+    <div className="space-y-6 w-full">
       {/* KPI Grid */}
-      <div className="kpi-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <KPICard
           label="Registered Patients"
           value={patients.length}
@@ -74,7 +74,7 @@ export const AdminDashboard: React.FC = () => {
         />
       </div>
 
-      <div className="grid-2-col">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Appointments */}
         <Card
           title="Recent Clinical Consultations"

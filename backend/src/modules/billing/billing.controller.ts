@@ -16,27 +16,29 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.PHARMACIST)
   @Post()
-  @ApiOperation({ summary: 'Admin: Create billing invoice' })
+  @ApiOperation({ summary: 'Admin & Pharmacist: Create hospital billing invoice' })
   async create(@Body() dto: CreateBillDto) {
     return this.billingService.create(dto);
   }
 
-  @Roles(Role.ADMIN, Role.PATIENT)
+  @Roles(Role.ADMIN, Role.DOCTOR, Role.PHARMACIST, Role.PATIENT)
   @Get()
-  @ApiOperation({ summary: 'Admin & Patient: List billing invoices' })
+  @ApiOperation({ summary: 'Admin, Doctor, Pharmacist & Patient: List billing invoices' })
   async findAll(@CurrentUser() user: any) {
     return this.billingService.findAll(user);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.PHARMACIST, Role.PATIENT)
   @Patch(':id/pay')
-  @ApiOperation({ summary: 'Admin: Record payment against an invoice' })
+  @ApiOperation({ summary: 'Admin, Pharmacist & Patient: Record payment against an invoice' })
   async recordPayment(
     @Param('id') id: string,
     @Body('paidAmount') paidAmount: number,
+    @Body('paymentMethod') paymentMethod?: any,
   ) {
-    return this.billingService.recordPayment(id, paidAmount);
+    return this.billingService.recordPayment(id, paidAmount, paymentMethod);
   }
 }
+

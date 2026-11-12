@@ -10,10 +10,12 @@ import {
   TableCell,
   Badge,
   Button,
+  StatusPill,
 } from '../../../shared/ui';
 import { api } from '../../../shared/api';
 import type { User } from '../../../shared/types';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { cn } from '@/lib/utils';
 
 export const StaffDirectoryPage: React.FC = () => {
   const { showToast } = useAuth();
@@ -51,18 +53,23 @@ export const StaffDirectoryPage: React.FC = () => {
     roleFilter === 'ALL' ? users : users.filter((u) => u.role === roleFilter);
 
   return (
-    <div className="portal-page">
+    <div className="space-y-6 w-full">
       <Card
         title="Role-Based Access Control (RBAC) Directory"
         subtitle="Manage hospital staff credentials and account authorization statuses"
         icon={<Shield size={18} />}
         action={
-          <div className="flex-row-gap">
-            <span className="text-muted text-xs">Filter by Role:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-muted-foreground text-xs">Filter by Role:</span>
             {['ALL', 'DOCTOR', 'PHARMACIST', 'PATIENT', 'ADMIN'].map((r) => (
               <button
                 key={r}
-                className={`filter-chip ${roleFilter === r ? 'active' : ''}`}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-mono font-semibold uppercase border transition-colors cursor-pointer',
+                  roleFilter === r
+                    ? 'bg-primary text-primary-foreground border-primary shadow-xs'
+                    : 'bg-card text-muted-foreground hover:text-foreground border-border'
+                )}
                 onClick={() => setRoleFilter(r)}
               >
                 {r}
@@ -86,12 +93,12 @@ export const StaffDirectoryPage: React.FC = () => {
             {filteredUsers.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>
-                  <div className="font-semibold text-primary">
+                  <div className="font-semibold text-foreground">
                     {u.firstName} {u.lastName}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <span className="font-mono text-xs">{u.email}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{u.email}</span>
                 </TableCell>
                 <TableCell>
                   <Badge variant={u.role === 'ADMIN' ? 'solid' : 'outline'}>
@@ -99,16 +106,10 @@ export const StaffDirectoryPage: React.FC = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <span className="text-muted">{u.phoneNumber || '—'}</span>
+                  <span className="text-muted-foreground">{u.phoneNumber || '—'}</span>
                 </TableCell>
                 <TableCell>
-                  <span
-                    className={`status-pill ${
-                      u.isActive ? 'status-active' : 'status-inactive'
-                    }`}
-                  >
-                    {u.isActive ? 'ACTIVE' : 'DEACTIVATED'}
-                  </span>
+                  <StatusPill status={u.isActive ? 'ACTIVE' : 'DEACTIVATED'} />
                 </TableCell>
                 <TableCell>
                   <Button
@@ -123,7 +124,7 @@ export const StaffDirectoryPage: React.FC = () => {
             ))}
             {filteredUsers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                   No accounts found matching filter
                 </TableCell>
               </TableRow>
@@ -134,3 +135,5 @@ export const StaffDirectoryPage: React.FC = () => {
     </div>
   );
 };
+
+export default StaffDirectoryPage;
