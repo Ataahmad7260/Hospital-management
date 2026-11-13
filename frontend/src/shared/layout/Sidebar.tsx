@@ -217,6 +217,13 @@ export const Sidebar: React.FC<Props> = ({
 
   const navGroups = getNavGroups();
 
+  const handleItemClick = (itemId: string) => {
+    onSelectView(itemId);
+    if (!collapsed && typeof window !== 'undefined' && window.innerWidth < 768) {
+      onToggleCollapse();
+    }
+  };
+
   const getRoleBadgeClass = (r: Role) => {
     switch (r) {
       case 'ADMIN':
@@ -233,105 +240,116 @@ export const Sidebar: React.FC<Props> = ({
   };
 
   return (
-    <aside
-      className={`relative flex flex-col bg-card text-card-foreground border-r border-border transition-all duration-300 select-none z-30 shrink-0 ${
-        collapsed ? 'w-16' : 'w-64 sm:w-72'
-      }`}
-    >
-      {/* Brand Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border h-16">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0 shadow-sm shadow-primary/30">
-            <Activity size={18} strokeWidth={2.4} />
-          </div>
-          {!collapsed && (
-            <div className="truncate">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm tracking-tight text-foreground">AURA CLINICAL</span>
-                <span className="text-[0.62rem] font-mono px-1.5 py-0.5 rounded bg-primary/15 border border-primary/25 text-primary font-bold">
-                  v1.0
-                </span>
-              </div>
-              <div className="text-[0.68rem] text-muted-foreground font-medium truncate flex items-center gap-1.5 mt-0.5">
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    isDbOnline ? 'bg-emerald-400 shadow-xs shadow-emerald-400/50' : 'bg-muted-foreground'
-                  }`}
-                />
-                <span className={isDbOnline ? 'text-emerald-400' : ''}>
-                  {isDbOnline ? 'MongoDB rs0 Live' : 'Connecting...'}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Collapse toggle */}
-        <button
+    <>
+      {/* Mobile Drawer Overlay Backdrop */}
+      {!collapsed && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 md:hidden animate-in fade-in duration-200"
           onClick={onToggleCollapse}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-colors cursor-pointer"
-          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-      </div>
-
-      {/* Role Indicator / Switcher Widget (Interactive exclusively for Administrator) */}
-      {!collapsed ? (
-        <div className="p-3 border-b border-border bg-secondary/30">
-          <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground font-mono uppercase">
-            <span className="flex items-center gap-1 font-semibold text-foreground">
-              <Sparkles size={11} className="text-primary" /> Active Clearance
-            </span>
-            <span className={`font-bold px-2 py-0.5 rounded border text-[0.65rem] ${getRoleBadgeClass(role)}`}>
-              {role}
-            </span>
-          </div>
-
-          {role === 'ADMIN' && (
-            <div className="mt-2 text-[0.62rem] text-muted-foreground font-mono flex items-center justify-between border-t border-border/60 pt-1.5">
-              <span>SECURITY SCOPE:</span>
-              <span className="font-bold text-foreground font-mono">ROOT ADMIN</span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="p-2 border-b border-border text-center">
-          <span className={`inline-block text-[0.6rem] font-mono px-1 rounded border font-bold ${getRoleBadgeClass(role)}`}>
-            {role.slice(0, 3)}
-          </span>
-        </div>
+          aria-hidden="true"
+        />
       )}
 
-      {/* Navigation Items List */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-4">
-        {navGroups.map((group, gIdx) => (
-          <div key={gIdx}>
+      <aside
+        className={`flex flex-col bg-card text-card-foreground border-r border-border transition-all duration-300 select-none shrink-0 ${collapsed
+            ? 'w-16 relative z-30'
+            : 'fixed inset-y-0 left-0 z-40 w-64 sm:w-72 md:relative md:z-30 shadow-2xl md:shadow-none'
+          }`}
+      >
+        {/* Brand Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border h-16">
+          <div className="flex items-center gap-3 overflow-hidden min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0 shadow-sm shadow-primary/30">
+              <Activity size={18} strokeWidth={2.4} />
+            </div>
             {!collapsed && (
-              <div className="px-3 py-1 text-[0.65rem] font-mono uppercase tracking-wider text-muted-foreground/80 font-bold">
-                {group.groupTitle}
+              <div className="truncate min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-bold text-sm tracking-tight text-foreground truncate">Aura Clinic</span>
+                  <span className="text-[0.62rem] font-mono px-1.5 py-0.5 rounded bg-primary/15 border border-primary/25 text-primary font-bold shrink-0">
+                    v1.0
+                  </span>
+                </div>
+                <div className="text-[0.68rem] text-muted-foreground font-medium truncate flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${isDbOnline ? 'bg-emerald-400 shadow-xs shadow-emerald-400/50' : 'bg-muted-foreground'
+                      }`}
+                  />
+                  <span className={isDbOnline ? 'text-emerald-400 truncate' : 'truncate'}>
+                    {isDbOnline ? 'MongoDB rs0 Live' : 'Connecting...'}
+                  </span>
+                </div>
               </div>
             )}
-            <div className="space-y-1 mt-1">
-              {group.items.map((item) => {
-                const cleanView = activeView.replace(/^\//, '');
-                const cleanItemId = item.id.replace(/^\//, '');
-                const isActive =
-                  cleanView === cleanItemId ||
-                  (cleanItemId === 'admin/dashboard' && (cleanView === 'dashboard' || cleanView === 'admin' || cleanView === 'admin-portal')) ||
-                  (cleanItemId === 'doctor/dashboard' && cleanView === 'doctor-portal') ||
-                  (cleanItemId === 'doctor/prescriptions' && cleanView === 'doctor-prescriptions') ||
-                  (cleanItemId === 'patient/dashboard' && cleanView === 'patient-portal') ||
-                  (cleanItemId === 'patient/prescriptions' && cleanView === 'my-prescriptions') ||
-                  (cleanItemId === 'patient/billing' && cleanView === 'invoices-payments') ||
-                  (cleanItemId === 'pharmacist/dashboard' && cleanView === 'pharmacist-portal');
+          </div>
 
-                return (
-                  <button
+          {/* Collapse toggle */}
+          <button
+            onClick={onToggleCollapse}
+            className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-colors cursor-pointer shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
+
+        {/* Role Indicator / Switcher Widget (Interactive exclusively for Administrator) */}
+        {!collapsed ? (
+          <div className="p-3 border-b border-border bg-secondary/30">
+            <div className="flex items-center justify-between text-[0.68rem] text-muted-foreground font-mono uppercase">
+              <span className="flex items-center gap-1 font-semibold text-foreground">
+                <Sparkles size={11} className="text-primary" /> Active Clearance
+              </span>
+              <span className={`font-bold px-2 py-0.5 rounded border text-[0.65rem] ${getRoleBadgeClass(role)}`}>
+                {role}
+              </span>
+            </div>
+
+            {role === 'ADMIN' && (
+              <div className="mt-2 text-[0.62rem] text-muted-foreground font-mono flex items-center justify-between border-t border-border/60 pt-1.5">
+                <span>SECURITY SCOPE:</span>
+                <span className="font-bold text-foreground font-mono">ROOT ADMIN</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-2 border-b border-border text-center">
+            <span className={`inline-block text-[0.6rem] font-mono px-1 rounded border font-bold ${getRoleBadgeClass(role)}`}>
+              {role.slice(0, 3)}
+            </span>
+          </div>
+        )}
+
+        {/* Navigation Items List */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-4">
+          {navGroups.map((group, gIdx) => (
+            <div key={gIdx}>
+              {!collapsed && (
+                <div className="px-3 py-1 text-[0.65rem] font-mono uppercase tracking-wider text-muted-foreground/80 font-bold">
+                  {group.groupTitle}
+                </div>
+              )}
+              <div className="space-y-1 mt-1">
+                {group.items.map((item) => {
+                  const cleanView = activeView.replace(/^\//, '');
+                  const cleanItemId = item.id.replace(/^\//, '');
+                  const isActive =
+                    cleanView === cleanItemId ||
+                    (cleanItemId === 'admin/dashboard' && (cleanView === 'dashboard' || cleanView === 'admin' || cleanView === 'admin-portal')) ||
+                    (cleanItemId === 'doctor/dashboard' && cleanView === 'doctor-portal') ||
+                    (cleanItemId === 'doctor/prescriptions' && cleanView === 'doctor-prescriptions') ||
+                    (cleanItemId === 'patient/dashboard' && cleanView === 'patient-portal') ||
+                    (cleanItemId === 'patient/prescriptions' && cleanView === 'my-prescriptions') ||
+                    (cleanItemId === 'patient/billing' && cleanView === 'invoices-payments') ||
+                    (cleanItemId === 'pharmacist/dashboard' && cleanView === 'pharmacist-portal');
+
+                  return (
+                    <button
                     key={item.id}
-                    onClick={() => onSelectView(item.id)}
+                    onClick={() => handleItemClick(item.id)}
                     title={collapsed ? item.label : undefined}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer text-left ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium min-h-[44px] transition-all cursor-pointer text-left ${
                       isActive
                         ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary/70'
@@ -344,74 +362,75 @@ export const Sidebar: React.FC<Props> = ({
                     >
                       {item.icon}
                     </span>
-                    {!collapsed && (
-                      <div className="truncate flex-1">
-                        <div className="leading-tight truncate flex items-center justify-between">
-                          <span>{item.label}</span>
-                          {item.highlight && (
-                            <span
-                              className={`text-[0.6rem] font-mono px-1.5 py-0.2 rounded font-bold ${
-                                isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/20 text-primary border border-primary/30'
+                      {!collapsed && (
+                        <div className="truncate flex-1">
+                          <div className="leading-tight truncate flex items-center justify-between">
+                            <span>{item.label}</span>
+                            {item.highlight && (
+                              <span
+                                className={`text-[0.6rem] font-mono px-1.5 py-0.2 rounded font-bold ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/20 text-primary border border-primary/30'
+                                  }`}
+                              >
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            className={`text-[0.65rem] font-normal truncate mt-0.5 ${isActive ? 'text-primary-foreground/80' : 'text-muted-foreground/80'
                               }`}
-                            >
-                              NEW
-                            </span>
-                          )}
+                          >
+                            {item.sublabel}
+                          </div>
                         </div>
-                        <div
-                          className={`text-[0.65rem] font-normal truncate mt-0.5 ${
-                            isActive ? 'text-primary-foreground/80' : 'text-muted-foreground/80'
-                          }`}
-                        >
-                          {item.sublabel}
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom User Profile Card & Sign out */}
-      <div className="p-3 border-t border-border bg-card/60">
-        {!collapsed ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-primary/15 text-primary border border-primary/25 flex items-center justify-center font-mono font-bold text-xs shrink-0">
-                {currentUser?.firstName?.[0] || 'U'}
-                {currentUser?.lastName?.[0] || 'A'}
-              </div>
-              <div className="truncate text-left">
-                <div className="text-xs font-bold text-foreground truncate">
-                  {currentUser?.firstName} {currentUser?.lastName}
-                </div>
-                <div className="text-[0.65rem] text-muted-foreground font-mono truncate">
-                  {currentUser?.email}
-                </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          ))}
+        </div>
 
+        {/* Bottom User Profile Card & Sign out */}
+        <div className="p-3 border-t border-border bg-card/60">
+          {!collapsed ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-primary/15 text-primary border border-primary/25 flex items-center justify-center font-mono font-bold text-xs shrink-0">
+                  {currentUser?.firstName?.[0] || 'U'}
+                  {currentUser?.lastName?.[0] || 'A'}
+                </div>
+                <div className="truncate text-left">
+                  <div className="text-xs font-bold text-foreground truncate">
+                    {currentUser?.firstName} {currentUser?.lastName}
+                  </div>
+                  <div className="text-[0.65rem] text-muted-foreground font-mono truncate">
+                    {currentUser?.email}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={logout}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : (
             <button
               onClick={logout}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+              className="w-full p-2 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer min-h-[44px]"
               title="Sign Out"
+              aria-label="Sign Out"
             >
-              <LogOut size={15} />
+              <LogOut size={16} />
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={logout}
-            className="w-full p-2 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors cursor-pointer"
-            title="Sign Out"
-          >
-            <LogOut size={16} />
-          </button>
-        )}
-      </div>
-    </aside>
+          )}
+        </div>
+      </aside>
+    </>
   );
 };

@@ -159,7 +159,7 @@ export const DoctorsManagementPage: React.FC<Props> = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={loadDoctors}
-              className="p-1.5 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
               title="Refresh Roster"
             >
               <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -178,13 +178,13 @@ export const DoctorsManagementPage: React.FC<Props> = () => {
         {/* Search & Department Filters Strip */}
         <div className="flex flex-col sm:flex-row gap-3 pb-4 border-b border-border min-w-0 max-w-full">
           <div className="relative flex-1 min-w-0">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <input
               type="text"
               placeholder="Search by name, email, specialization, or license..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
+              className="w-full pl-9 pr-3 py-2 min-h-[44px] rounded-lg border border-border bg-background text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -192,7 +192,7 @@ export const DoctorsManagementPage: React.FC<Props> = () => {
             <span className="text-xs text-muted-foreground whitespace-nowrap font-mono">Dept:</span>
             <button
               onClick={() => setDepartmentFilter('ALL')}
-              className={`px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap flex items-center ${
                 departmentFilter === 'ALL'
                   ? 'bg-foreground text-background font-semibold shadow-xs'
                   : 'border border-border text-muted-foreground hover:text-foreground bg-card'
@@ -204,7 +204,7 @@ export const DoctorsManagementPage: React.FC<Props> = () => {
               <button
                 key={dept}
                 onClick={() => setDepartmentFilter(dept)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap ${
+                className={`px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-md text-xs font-medium cursor-pointer transition-colors whitespace-nowrap flex items-center ${
                   departmentFilter === dept
                     ? 'bg-foreground text-background font-semibold shadow-xs'
                     : 'border border-border text-muted-foreground hover:text-foreground bg-card'
@@ -339,7 +339,7 @@ export const DoctorsManagementPage: React.FC<Props> = () => {
                     <TableCell>
                       <button
                         onClick={() => handleToggleStatus(doc)}
-                        className={`text-xs px-2.5 py-1 rounded-md border font-medium transition-colors cursor-pointer ${
+                        className={`text-xs px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-md border font-medium transition-colors cursor-pointer flex items-center justify-center ${
                           isActive
                             ? 'border-destructive/30 text-destructive hover:bg-destructive/10'
                             : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'

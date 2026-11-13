@@ -99,7 +99,7 @@ return (
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md border border-border bg-card/60 hover:bg-secondary cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 min-h-[44px] rounded-md border border-border bg-card/60 hover:bg-secondary cursor-pointer shrink-0"
             title="Return to Aura Hospital Public Portal"
           >
             <ArrowLeft size={13} />
@@ -138,7 +138,7 @@ return (
             setTab('login');
             setError(null);
           }}
-          className={`py-2 rounded-md transition-all cursor-pointer ${tab === 'login'
+          className={`py-2.5 min-h-[44px] flex items-center justify-center rounded-md transition-all cursor-pointer ${tab === 'login'
             ? 'bg-background text-foreground shadow-xs font-semibold'
             : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -151,7 +151,7 @@ return (
             setTab('register');
             setError(null);
           }}
-          className={`py-2 rounded-md transition-all cursor-pointer ${tab === 'register'
+          className={`py-2.5 min-h-[44px] flex items-center justify-center rounded-md transition-all cursor-pointer ${tab === 'register'
             ? 'bg-background text-foreground shadow-xs font-semibold'
             : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -218,7 +218,7 @@ return (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-foreground text-background font-semibold text-xs py-2.5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              className="w-full bg-foreground text-background font-semibold text-xs py-3 min-h-[44px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-background/20 border-t-background rounded-full animate-spin" />
@@ -377,7 +377,7 @@ return (
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-foreground text-background font-semibold text-xs py-2.5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-2"
+              className="w-full bg-foreground text-background font-semibold text-xs py-3 min-h-[44px] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-xs mt-2"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-background/20 border-t-background rounded-full animate-spin" />
@@ -405,7 +405,7 @@ return (
               type="button"
               disabled={isSubmitting}
               onClick={() => handleQuickLogin('ADMIN')}
-              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2 rounded-lg text-left transition-all cursor-pointer group"
+              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2.5 min-h-[44px] rounded-lg text-left transition-all cursor-pointer group"
             >
               <Shield size={14} className="text-muted-foreground group-hover:text-foreground shrink-0" />
               <div className="min-w-0">
@@ -418,7 +418,7 @@ return (
               type="button"
               disabled={isSubmitting}
               onClick={() => handleQuickLogin('DOCTOR')}
-              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2 rounded-lg text-left transition-all cursor-pointer group"
+              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2.5 min-h-[44px] rounded-lg text-left transition-all cursor-pointer group"
             >
               <Stethoscope size={14} className="text-muted-foreground group-hover:text-foreground shrink-0" />
               <div className="min-w-0">
@@ -431,7 +431,7 @@ return (
               type="button"
               disabled={isSubmitting}
               onClick={() => handleQuickLogin('PHARMACIST')}
-              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2 rounded-lg text-left transition-all cursor-pointer group"
+              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2.5 min-h-[44px] rounded-lg text-left transition-all cursor-pointer group"
             >
               <Pill size={14} className="text-muted-foreground group-hover:text-foreground shrink-0" />
               <div className="min-w-0">
@@ -444,7 +444,7 @@ return (
               type="button"
               disabled={isSubmitting}
               onClick={() => handleQuickLogin('PATIENT')}
-              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2 rounded-lg text-left transition-all cursor-pointer group"
+              className="flex items-center gap-2 border border-border hover:border-foreground bg-muted/30 hover:bg-muted/70 p-2.5 min-h-[44px] rounded-lg text-left transition-all cursor-pointer group"
             >
               <UserIcon size={14} className="text-muted-foreground group-hover:text-foreground shrink-0" />
               <div className="min-w-0">

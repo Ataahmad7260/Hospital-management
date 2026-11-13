@@ -1434,7 +1434,7 @@ export const DoctorPortal: React.FC<{ initialTab?: 'today-patients' | 'prescript
       {/* Set Review / Follow-Up Status Modal */}
       {statusModalApt && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+          <div className="border border-border bg-card p-4 sm:p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between gap-2 border-b border-border/60 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -1547,7 +1547,7 @@ export const DoctorPortal: React.FC<{ initialTab?: 'today-patients' | 'prescript
       {/* Patient Uploaded Medical Reports Modal */}
       {reportsModalApt && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-6 rounded-xl max-w-xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-xl">
+          <div className="border border-border bg-card p-4 sm:p-6 rounded-xl max-w-xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-2 border-b border-border/60 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -1672,7 +1672,7 @@ export const DoctorPortal: React.FC<{ initialTab?: 'today-patients' | 'prescript
       {/* Medical Report Secure File Preview Modal */}
       {previewReport && (
         <div className="fixed inset-0 z-50 bg-background/85 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-5 rounded-xl max-w-4xl w-full space-y-3 shadow-2xl">
+          <div className="border border-border bg-card p-4 sm:p-5 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto space-y-3 shadow-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-2.5">
               <div>
                 <h2 className="text-sm font-bold text-foreground">{previewReport.report.title}</h2>

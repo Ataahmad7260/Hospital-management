@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Activity,
   BookOpen,
+  Menu,
 } from 'lucide-react';
 import { AuthProvider, useAuth, ROLE_REDIRECT_MAP } from './shared/context/AuthContext';
 import { ThemeProvider } from './shared/context/ThemeContext';
@@ -293,10 +294,23 @@ function MainLayout() {
             <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16 gap-3 min-w-0 max-w-full overflow-hidden">
               {/* Left: Breadcrumbs & Current View Title */}
               <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-initial md:max-w-[260px] lg:max-w-[340px]">
-                <span className="font-mono text-xs text-primary font-bold uppercase hidden sm:inline tracking-wider shrink-0">
-                  Aura
-                </span>
-                <ChevronRight size={13} className="text-muted-foreground hidden sm:inline shrink-0" />
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="md:hidden p-2 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  title="Toggle Navigation Menu"
+                  aria-label="Toggle Navigation Menu"
+                >
+                  <Menu size={18} />
+                </button>
+                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                  <div className="w-5 h-5 rounded bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                    <Activity size={12} strokeWidth={2.5} />
+                  </div>
+                  <span className="font-semibold text-xs tracking-tight text-foreground">
+                    Aura Clinic
+                  </span>
+                  <ChevronRight size={13} className="text-muted-foreground" />
+                </div>
                 <h1 className="text-xs sm:text-sm font-bold text-foreground truncate tracking-tight">
                   {getViewTitle()}
                 </h1>
@@ -418,7 +432,7 @@ function MainLayout() {
 
                 {/* State Sync & Refresh */}
                 <button
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary/70 hover:bg-secondary border border-border rounded-md cursor-pointer transition-colors shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground bg-secondary/70 hover:bg-secondary border border-border rounded-md cursor-pointer transition-colors shadow-xs min-h-[44px]"
                   onClick={() => {
                     checkHealth();
                     loadDailyStats();
@@ -433,7 +447,7 @@ function MainLayout() {
                 {/* User Profile Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full border border-border bg-card/60 hover:bg-secondary/70 hover:border-primary/40 transition-all cursor-pointer select-none shadow-xs">
+                    <button className="flex items-center gap-2 p-1 pl-2 pr-3 rounded-full border border-border bg-card/60 hover:bg-secondary/70 hover:border-primary/40 transition-all cursor-pointer select-none shadow-xs min-h-[44px]">
                       <Avatar className="w-6 h-6 border border-border">
                         <AvatarFallback className="bg-primary/15 text-primary font-mono text-[0.65rem] font-bold">
                           {currentUser?.firstName?.[0] || 'A'}

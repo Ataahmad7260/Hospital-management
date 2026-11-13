@@ -153,7 +153,7 @@ export const HospitalFinancialsPage: React.FC = () => {
                 key={cat}
                 type="button"
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-2.5 py-1 rounded-full text-xs font-mono font-semibold uppercase border cursor-pointer transition-colors ${categoryFilter === cat
+                className={`px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-full text-xs font-mono font-semibold uppercase border cursor-pointer transition-colors flex items-center ${categoryFilter === cat
                   ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'bg-card text-muted-foreground hover:text-foreground border-border'
                   }`}

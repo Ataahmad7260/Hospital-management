@@ -923,7 +923,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
       {/* 4. Booking Consultation Modal with Clean Spacing & Proper Alignments */}
       {isBookingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="bg-card text-card-foreground border border-border rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
+          <div className="bg-card text-card-foreground border border-border rounded-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="text-base font-semibold text-foreground flex items-center gap-2.5">
                 <Calendar size={17} className="text-primary shrink-0" />
@@ -957,7 +957,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                   value={bookingForm.doctorId}
                   onChange={(e) => setBookingForm({ ...bookingForm, doctorId: e.target.value })}
                   required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 min-h-[44px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="">Select a physician...</option>
                   {doctors.map((d) => (
@@ -977,7 +977,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                   value={bookingForm.appointmentDate}
                   onChange={(e) => setBookingForm({ ...bookingForm, appointmentDate: e.target.value })}
                   required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 min-h-[44px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -989,7 +989,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                   value={bookingForm.timeSlot}
                   onChange={(e) => setBookingForm({ ...bookingForm, timeSlot: e.target.value })}
                   required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 min-h-[44px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 >
                   <option value="09:00 - 09:30 AM">09:00 - 09:30 AM</option>
                   <option value="09:30 - 10:00 AM">09:30 - 10:00 AM</option>
@@ -1010,7 +1010,7 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                   value={bookingForm.reason}
                   onChange={(e) => setBookingForm({ ...bookingForm, reason: e.target.value })}
                   required
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 min-h-[44px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
 
@@ -1038,20 +1038,23 @@ export const MasterHospitalDashboard: React.FC<Props> = ({ onNavigate }) => {
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 pt-3 border-t border-border">
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="md"
                   onClick={() => setIsBookingModalOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  size="sm"
+                  disabled={loading}
+                  size="md"
+                  className="w-full sm:w-auto gap-1.5"
                 >
-                  Confirm Booking
+                  {loading ? 'Confirming...' : 'Confirm Appointment'}
                 </Button>
               </div>
             </form>

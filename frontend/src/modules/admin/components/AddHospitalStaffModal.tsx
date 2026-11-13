@@ -221,7 +221,7 @@ export const AddHospitalStaffModal: React.FC<AddHospitalStaffModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs select-none animate-in fade-in duration-150">
-      <div className="relative w-full max-w-2xl border border-border bg-card text-card-foreground p-6 rounded-xl shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto overflow-x-hidden">
+      <div className="relative w-full max-w-2xl border border-border bg-card text-card-foreground p-4 sm:p-6 rounded-xl shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto overflow-x-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-border">
           <div className="flex items-center gap-2.5">

@@ -20,27 +20,27 @@ export const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
           WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%)',
         }}
       />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-b from-[#222222]/40 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[700px] h-[350px] bg-gradient-to-b from-[#222222]/40 to-transparent blur-3xl pointer-events-none overflow-hidden" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left">
-        <div className="max-w-4xl mx-auto sm:mx-0">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left min-w-0 w-full">
+        <div className="max-w-4xl mx-auto sm:mx-0 min-w-0">
           {/* Live Status Badge: Emergency Care Open 24/7 with Pulsing Emerald Dot */}
-          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#121212] border border-[#262626] shadow-xs mb-8">
-            <span className="relative flex h-2.5 w-2.5">
+          <div className="inline-flex items-center gap-2 sm:gap-2.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#121212] border border-[#262626] shadow-xs mb-8 max-w-full overflow-hidden">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
-            <span className="text-xs font-mono uppercase tracking-wider text-[#D4D4D8] font-medium">
+            <span className="text-xs font-mono uppercase tracking-wider text-[#D4D4D8] font-medium truncate">
               Emergency Care Open 24/7
             </span>
-            <span className="text-[#3F3F46]">•</span>
+            <span className="text-[#3F3F46] hidden sm:inline">•</span>
             <span className="text-[11px] font-mono text-[#A1A1AA] hidden sm:inline">
               ICU & Ambulance Standing By
             </span>
           </div>
 
           {/* Main Headline: Large, elegant light font */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight text-white leading-[1.08] mb-6">
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-light tracking-tight text-white leading-[1.12] sm:leading-[1.08] mb-6">
             Advanced Healthcare, <br />
             <span className="font-normal text-white">Delivered with Compassion.</span>
           </h1>

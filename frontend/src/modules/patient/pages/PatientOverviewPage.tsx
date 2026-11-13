@@ -257,7 +257,7 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-md text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-md text-xs transition-all cursor-pointer flex items-center ${
                   filterStatus === st
                     ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
                     : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border'
@@ -710,11 +710,11 @@ export const PatientOverviewPage: React.FC<{ onAdmitClick?: () => void }> = ({ o
               />
             </FormGroup>
 
-            <div className="modal-footer flex items-center justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setPayingBill(null)}>
+            <div className="modal-footer flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-2">
+              <Button variant="outline" size="md" onClick={() => setPayingBill(null)} className="w-full sm:w-auto">
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" size="md" className="w-full sm:w-auto">
                 Record Payment of ${Number(payAmountInput).toFixed(2)}
               </Button>
             </div>

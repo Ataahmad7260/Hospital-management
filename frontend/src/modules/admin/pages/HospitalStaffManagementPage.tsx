@@ -265,13 +265,13 @@ export const HospitalStaffManagementPage: React.FC<HospitalStaffManagementPagePr
           {/* Search, Shift & Duty Status Controls */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0 max-w-full">
             <div className="relative flex-1 min-w-0 max-w-md">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search by name, employee code, ward, department, or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
+                className="w-full pl-9 pr-3 py-2 min-h-[44px] rounded-lg border border-border bg-background text-foreground text-xs focus:outline-hidden focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -282,7 +282,7 @@ export const HospitalStaffManagementPage: React.FC<HospitalStaffManagementPagePr
                   setCategoryFilter(e.target.value as 'ALL' | HospitalStaffCategory)
                 }
                 aria-label="Filter by staff role category"
-                className="px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground text-xs font-mono cursor-pointer max-w-full"
+                className="px-2.5 py-2 min-h-[44px] rounded-lg border border-border bg-background text-foreground text-xs font-mono cursor-pointer max-w-full"
               >
                 <option value="ALL">All Role Categories</option>
                 {HOSPITAL_STAFF_ROLE_OPTIONS.map((opt) => (
@@ -296,7 +296,7 @@ export const HospitalStaffManagementPage: React.FC<HospitalStaffManagementPagePr
                 value={shiftFilter}
                 onChange={(e) => setShiftFilter(e.target.value as 'ALL' | StaffShift)}
                 aria-label="Filter by duty shift"
-                className="px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground text-xs font-mono cursor-pointer max-w-full"
+                className="px-2.5 py-2 min-h-[44px] rounded-lg border border-border bg-background text-foreground text-xs font-mono cursor-pointer max-w-full"
               >
                 <option value="ALL">All Shifts</option>
                 {(Object.keys(STAFF_SHIFT_LABELS) as StaffShift[]).map((sh) => (
@@ -306,13 +306,13 @@ export const HospitalStaffManagementPage: React.FC<HospitalStaffManagementPagePr
                 ))}
               </select>
 
-              <div className="flex flex-wrap items-center gap-1 bg-muted/40 p-1 rounded-lg border border-border max-w-full">
+              <div className="flex flex-wrap items-center gap-1 bg-muted/40 p-1 rounded-lg border border-border max-w-full min-h-[44px]">
                 {(['ALL', 'ACTIVE', 'ON_LEAVE', 'INACTIVE'] as const).map((st) => (
                   <button
                     key={st}
                     type="button"
                     onClick={() => setStatusFilter(st)}
-                    className={`px-2 py-1 rounded-md text-[11px] font-mono font-semibold cursor-pointer transition-colors ${
+                    className={`px-2.5 py-1.5 min-h-[36px] sm:min-h-7 rounded-md text-[11px] font-mono font-semibold cursor-pointer transition-colors flex items-center ${
                       statusFilter === st
                         ? 'bg-foreground text-background shadow-xs'
                         : 'text-muted-foreground hover:text-foreground'

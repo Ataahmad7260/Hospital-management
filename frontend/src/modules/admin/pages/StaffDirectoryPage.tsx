@@ -131,7 +131,7 @@ export const StaffDirectoryPage: React.FC<{ onOpenHospitalStaff?: () => void }> 
                 key={opt.id}
                 type="button"
                 className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-mono font-semibold uppercase border transition-colors cursor-pointer',
+                  'px-3 py-1.5 min-h-[38px] sm:min-h-8 rounded-full text-xs font-mono font-semibold uppercase border transition-colors cursor-pointer flex items-center',
                   roleFilter === opt.id
                     ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                     : 'bg-card text-muted-foreground hover:text-foreground border-border',

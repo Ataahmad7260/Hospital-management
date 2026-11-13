@@ -28,9 +28,9 @@ export const Button: React.FC<ButtonProps> = ({
   }[variant];
 
   const sizeClasses = {
-    sm: 'min-h-8 h-auto px-3 py-1.5 text-xs',
-    md: 'min-h-9 h-auto px-4 py-2 text-sm',
-    lg: 'min-h-10 h-auto px-6 py-2.5 text-base',
+    sm: 'min-h-[40px] sm:min-h-8 h-auto px-3 py-1.5 text-xs',
+    md: 'min-h-[44px] h-auto px-4 py-2 text-sm',
+    lg: 'min-h-[48px] h-auto px-6 py-2.5 text-base',
   }[size];
 
   return (

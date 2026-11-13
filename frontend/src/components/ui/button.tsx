@@ -18,11 +18,11 @@ const buttonVariants = cva(
         success: 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-500',
       },
       size: {
-        default: 'min-h-9 h-auto px-4 py-2',
-        sm: 'min-h-8 h-auto px-3 py-1.5 text-xs rounded-md',
-        md: 'min-h-9 h-auto px-4 py-2 text-sm rounded-md',
-        lg: 'min-h-10 h-auto px-6 py-2.5 text-base rounded-md',
-        icon: 'h-9 w-9 p-0 shrink-0',
+        default: 'min-h-[44px] h-auto px-4 py-2',
+        sm: 'min-h-[40px] sm:min-h-8 h-auto px-3 py-1.5 text-xs rounded-md',
+        md: 'min-h-[44px] h-auto px-4 py-2 text-sm rounded-md',
+        lg: 'min-h-[48px] h-auto px-6 py-2.5 text-base rounded-md',
+        icon: 'min-h-[44px] min-w-[44px] sm:h-9 sm:w-9 sm:min-h-9 sm:min-w-9 p-0 shrink-0',
       },
     },
     defaultVariants: {

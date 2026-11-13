@@ -2151,7 +2151,7 @@ export const PatientPortal: React.FC<{ initialTab?: PatientPortalTab }> = ({
       {/* Upload Medical Report Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+          <div className="border border-border bg-card p-4 sm:p-6 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div>
                 <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -2286,7 +2286,7 @@ export const PatientPortal: React.FC<{ initialTab?: PatientPortalTab }> = ({
       {/* Medical Report Secure Preview Modal */}
       {previewReport && (
         <div className="fixed inset-0 z-50 bg-background/85 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-5 rounded-xl max-w-4xl w-full space-y-3 shadow-2xl">
+          <div className="border border-border bg-card p-4 sm:p-5 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto space-y-3 shadow-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-2.5">
               <div>
                 <h2 className="text-sm font-bold text-foreground">{previewReport.report.title}</h2>
@@ -2339,7 +2339,7 @@ export const PatientPortal: React.FC<{ initialTab?: PatientPortalTab }> = ({
       {/* Choose Doctor & Book Consultation Modal */}
       {isConsultModalOpen && selectedDoctor && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+          <div className="border border-border bg-card p-4 sm:p-6 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-xl">
             <div className="space-y-1 border-b border-border/60 pb-3">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -2528,7 +2528,7 @@ export const PatientPortal: React.FC<{ initialTab?: PatientPortalTab }> = ({
       {/* Pay Modal */}
       {isPayingModalOpen && selectedBill && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="border border-border bg-card p-6 rounded-xl max-w-md w-full space-y-4 shadow-xl">
+          <div className="border border-border bg-card p-4 sm:p-6 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-xl">
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-bold text-foreground">

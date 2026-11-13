@@ -21,7 +21,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={cn(
-        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors',
+        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-4 sm:p-6 shadow-sm transition-colors',
         className
       )}
     >
@@ -56,7 +56,7 @@ export const KPICard: React.FC<KPICardProps> = ({ label, value, subtext, icon, c
   return (
     <div
       className={cn(
-        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-6 shadow-sm transition-colors flex flex-col justify-between gap-3',
+        'w-full max-w-full min-w-0 overflow-hidden bg-card text-card-foreground border border-border rounded-xl p-4 sm:p-6 shadow-sm transition-colors flex flex-col justify-between gap-3',
         className
       )}
     >

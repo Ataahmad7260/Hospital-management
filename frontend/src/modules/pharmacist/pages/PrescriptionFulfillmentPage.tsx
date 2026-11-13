@@ -591,15 +591,17 @@ export const PrescriptionFulfillmentPage: React.FC<{
               </div>
             </FormRow>
 
-            <div className="modal-footer pt-3 border-t border-border">
-              <Button variant="ghost" type="button" onClick={() => setBillingPreview(null)}>
+            <div className="modal-footer flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 pt-3 border-t border-border">
+              <Button variant="ghost" type="button" size="md" onClick={() => setBillingPreview(null)} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="primary"
+                size="md"
                 disabled={submittingBill}
                 icon={<ArrowRight size={14} />}
+                className="w-full sm:w-auto"
               >
                 {submittingBill ? 'Generating...' : 'Generate Medicine Bill (Send to Patient)'}
               </Button>

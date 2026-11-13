@@ -60,8 +60,8 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
     try {
       const data = await api.getDoctors();
       setDoctors(data);
-      if (data.length > 0 && !doctorId) {
-        setDoctorId(data[0].id);
+      if (data.length > 0) {
+        setDoctorId((prev) => prev || data[0].id);
       }
     } catch (err: any) {
       console.error('Failed to load doctors for patient intake:', err);
@@ -70,7 +70,7 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedDoctor = doctors.find((d) => d.id === doctorId) || null;
+  const selectedDoctor = doctors.find((d) => d.id === doctorId) || doctors[0] || null;
   const consultationFee = Number(selectedDoctor?.consultationFee ?? 0);
 
   const resetForm = () => {
@@ -92,9 +92,13 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
       setError('Please enter patient first name and last name');
       return;
     }
-    if (!doctorId || !selectedDoctor) {
+    const effectiveDoc = selectedDoctor || doctors[0];
+    if (!effectiveDoc) {
       setError('Please select an attending doctor for admission');
       return;
+    }
+    if (!doctorId && effectiveDoc) {
+      setDoctorId(effectiveDoc.id);
     }
     if (!reason.trim()) {
       setError('Please enter the admission reason and symptoms');
@@ -334,8 +338,7 @@ export const AddPatientModal: React.FC<AddPatientModalProps> = ({
               Assigned Attending Doctor *
             </label>
             <select
-              required
-              value={doctorId}
+              value={doctorId || doctors[0]?.id || ''}
               onChange={(e) => setDoctorId(e.target.value)}
               className="w-full bg-background border border-border focus:border-foreground focus:outline-none px-3 py-2 text-xs rounded-lg text-foreground transition-colors cursor-pointer"
             >
