@@ -59,8 +59,14 @@ async function assertNoHorizontalOverflow(page: Page, contextLabel: string) {
 }
 
 test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
-  test('Auth pages have zero horizontal overflow across Desktop & Mobile', async ({ page }) => {
+  test('Aura Hospital Landing Page has zero horizontal overflow across Desktop & Mobile', async ({ page }) => {
     await page.goto('/');
+    await expect(page.getByText('Aura Hospital').first()).toBeVisible();
+    await assertNoHorizontalOverflow(page, 'Aura:LandingPage');
+  });
+
+  test('Auth pages have zero horizontal overflow across Desktop & Mobile', async ({ page }) => {
+    await page.goto('/#/login');
     await expect(page.getByRole('heading', { name: 'Clinical Authentication' })).toBeVisible();
     await assertNoHorizontalOverflow(page, 'Auth:Login');
 
@@ -69,7 +75,7 @@ test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
   });
 
   test('Admin Portal core management tabs have zero horizontal overflow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /ataah@gmail\.com/i }).click();
     const main = page.locator('main');
     await expect(main).toBeVisible();
@@ -85,7 +91,7 @@ test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
   });
 
   test('Admin Portal RBAC, Financials & intake routes have zero horizontal overflow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /ataah@gmail\.com/i }).click();
     const main = page.locator('main');
     await expect(main).toBeVisible();
@@ -111,7 +117,7 @@ test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
   });
 
   test('Doctor Portal views have zero horizontal overflow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Doctor\s+Clinical/i }).click();
     const main = page.locator('main');
     await expect(main).toBeVisible();
@@ -125,7 +131,7 @@ test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
   });
 
   test('Pharmacist Portal views have zero horizontal overflow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Pharmacist\s+Dispensary/i }).click();
     const main = page.locator('main');
     await expect(main).toBeVisible();
@@ -141,7 +147,7 @@ test.describe('Responsive Layout & No Horizontal Overflow Checks', () => {
   });
 
   test('Patient Portal views have zero horizontal overflow', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Patient\s+Intake Care/i }).click();
     const main = page.locator('main');
     await expect(main).toBeVisible();

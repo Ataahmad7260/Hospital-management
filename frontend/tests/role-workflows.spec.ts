@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Core Role Workflows (Admin, Doctor, Pharmacist, Patient)', () => {
   test('Admin workflow: RBAC role separation, Hospital Staff roster, no Pharmacy Formulary, and Admit Patient payment gate', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /ataah@gmail\.com/i }).click();
 
     const main = page.locator('main');
@@ -33,6 +33,7 @@ test.describe('Core Role Workflows (Admin, Doctor, Pharmacist, Patient)', () => 
     await expect(main.getByRole('button', { name: /^Patients?$/i })).toHaveCount(0);
 
     // Check Register & Admit Patient modal upfront Consultation Fee gate
+    await page.waitForTimeout(300);
     await page.getByRole('button', { name: /\+ Add Patient/i }).click();
     await expect(page.getByRole('heading', { name: 'Register & Admit Patient' })).toBeVisible();
     await expect(page.getByText(/Consultation Fee/i).first()).toBeVisible();
@@ -51,7 +52,7 @@ test.describe('Core Role Workflows (Admin, Doctor, Pharmacist, Patient)', () => 
   });
 
   test('Pharmacist workflow: Exclusive Medicine Management, Dispensary Billing, and Sales Revenue Ledger', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Pharmacist\s+Dispensary/i }).click();
 
     const main = page.locator('main');
@@ -78,7 +79,7 @@ test.describe('Core Role Workflows (Admin, Doctor, Pharmacist, Patient)', () => 
   });
 
   test('Doctor workflow: Consultation Queue and Prescription Writer with Medications & Lab Orders', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Doctor\s+Clinical/i }).click();
 
     const main = page.locator('main');
@@ -91,7 +92,7 @@ test.describe('Core Role Workflows (Admin, Doctor, Pharmacist, Patient)', () => 
   });
 
   test('Patient workflow: Two-stage Billing separation and Formal Clinical Prescription Sheet', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/login');
     await page.getByRole('button', { name: /Patient\s+Intake Care/i }).click();
 
     const main = page.locator('main');

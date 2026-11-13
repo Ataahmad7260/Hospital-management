@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useAuth, ROLE_CREDENTIALS, ROLE_REDIRECT_MAP } from '../../shared/context/AuthContext';
 import type { Role } from '../../shared/types';
 import { ThemeToggle } from '../../shared/components/ThemeToggle';
-import { Shield, Stethoscope, Pill, User as UserIcon, Lock, Mail, ArrowRight, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Shield, Stethoscope, Pill, User as UserIcon, Lock, Mail, ArrowRight, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 interface AuthPageProps {
   onSuccess: (redirectView: string) => void;
+  onBack?: () => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onSuccess, onBack }) => {
   const { login, register } = useAuth();
   const [tab, setTab] = useState<'login' | 'register'>('login');
 
@@ -94,13 +95,25 @@ return (
   <div className="min-h-screen w-full bg-background text-foreground flex flex-col justify-between items-center px-4 py-8 select-none font-sans antialiased">
     {/* Top Bar with Theme Toggle */}
     <header className="w-full max-w-md flex justify-between items-center pb-6">
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center font-mono font-bold text-xs tracking-tighter shadow-xs">
-          H+
+      <div className="flex items-center gap-3">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md border border-border bg-card/60 hover:bg-secondary cursor-pointer"
+            title="Return to Aura Hospital Public Portal"
+          >
+            <ArrowLeft size={13} />
+            <span className="font-medium">Aura Hospital</span>
+          </button>
+        )}
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded border border-border bg-card flex items-center justify-center font-mono font-bold text-xs tracking-tighter shadow-xs">
+            H+
+          </div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+            Hospital OS • RBAC Security
+          </span>
         </div>
-        <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-          Hospital OS • RBAC Security
-        </span>
       </div>
       <ThemeToggle />
     </header>

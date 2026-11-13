@@ -13,7 +13,7 @@ import {
   Activity,
   BookOpen,
 } from 'lucide-react';
-import { AuthProvider, useAuth } from './shared/context/AuthContext';
+import { AuthProvider, useAuth, ROLE_REDIRECT_MAP } from './shared/context/AuthContext';
 import { ThemeProvider } from './shared/context/ThemeContext';
 import { ThemeToggle } from './shared/components/ThemeToggle';
 import { Sidebar } from './shared/layout/Sidebar';
@@ -30,6 +30,7 @@ import { PharmacistPortal } from './modules/pharmacist/PharmacistPortal';
 import { AdminPortal } from './modules/admin/AdminPortal';
 import { ExpressPageTracker } from './modules/telemetry/ExpressPageTracker';
 import { SwaggerDocsView } from './modules/docs/SwaggerDocsView';
+import { AuraLandingPage } from './modules/landing/AuraLandingPage';
 import { Toast } from './shared/ui';
 import { api, API_ORIGIN } from './shared/api';
 import type { DailyAdmissionsStats } from './shared/types';
@@ -54,9 +55,12 @@ const normalizeView = (v: string): string => {
 function MainLayout() {
   const { currentUser, role, isAuthenticated, logout, toast, loading } = useAuth();
   const [activeView, setActiveView] = useState<string>(() => {
+    const path = window.location.pathname.replace(/^\//, '').trim();
+    if (path === 'login') return 'login';
     const raw = window.location.hash.replace(/^#\/?/, '');
     const clean = normalizeView(raw);
     if (clean) return clean;
+    if (!isAuthenticated) return 'home';
     if (role === 'DOCTOR') return 'doctor/dashboard';
     if (role === 'PHARMACIST') return 'pharmacist/dashboard';
     if (role === 'PATIENT') return 'patient/dashboard';
@@ -67,13 +71,26 @@ function MainLayout() {
   const [dailyStats, setDailyStats] = useState<DailyAdmissionsStats | null>(null);
 
   useEffect(() => {
-    const handleHash = () => {
+    const handleLocation = () => {
+      const path = window.location.pathname.replace(/^\//, '').trim();
+      if (path === 'login') {
+        setActiveView('login');
+        return;
+      }
       const clean = normalizeView(window.location.hash);
-      if (clean) setActiveView(clean);
+      if (clean) {
+        setActiveView(clean);
+      } else {
+        setActiveView(isAuthenticated ? (ROLE_REDIRECT_MAP[role] || 'admin/dashboard') : 'home');
+      }
     };
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+    window.addEventListener('hashchange', handleLocation);
+    window.addEventListener('popstate', handleLocation);
+    return () => {
+      window.removeEventListener('hashchange', handleLocation);
+      window.removeEventListener('popstate', handleLocation);
+    };
+  }, [isAuthenticated, role]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -148,21 +165,52 @@ function MainLayout() {
   const handleNavigate = (view: string) => {
     const clean = normalizeView(view);
     setActiveView(clean);
-    window.location.hash = `#/${clean}`;
+    if (clean === 'home' || clean === '') {
+      window.location.hash = '';
+      if (window.location.pathname === '/login') {
+        window.history.pushState(null, '', '/');
+      }
+    } else {
+      window.location.hash = `#/${clean}`;
+    }
   };
 
-  // If unauthenticated or explicit login view, show clean monochrome auth screen
-  if (!isAuthenticated || !currentUser || currentRoute === 'login') {
+  // If unauthenticated, decide between Aura Landing Page and Clinical Auth Page
+  if (!isAuthenticated || !currentUser) {
+    if (currentRoute === 'login') {
+      return (
+        <div className="min-h-screen bg-background text-foreground">
+          <AuthPage
+            onSuccess={(redirectView) => {
+              handleNavigate(redirectView);
+            }}
+            onBack={() => handleNavigate('home')}
+          />
+          {toast && <Toast message={toast.message} isError={toast.isError} />}
+        </div>
+      );
+    }
+
+    // Default unauthenticated public landing hub
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <AuthPage
-          onSuccess={(redirectView) => {
-            handleNavigate(redirectView);
-          }}
-        />
+      <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED]">
+        <AuraLandingPage onNavigateToLogin={() => handleNavigate('login')} />
         {toast && <Toast message={toast.message} isError={toast.isError} />}
       </div>
     );
+  }
+
+  // If authenticated but user explicitly navigated to #/login, route them to their dashboard
+  if (currentRoute === 'login') {
+    const targetDashboard =
+      role === 'DOCTOR'
+        ? 'doctor/dashboard'
+        : role === 'PHARMACIST'
+        ? 'pharmacist/dashboard'
+        : role === 'PATIENT'
+        ? 'patient/dashboard'
+        : 'admin/dashboard';
+    handleNavigate(targetDashboard);
   }
 
   const getViewTitle = () => {
@@ -459,6 +507,10 @@ function MainLayout() {
                     )}
 
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleNavigate('home')}>
+                      <ExternalLink size={13} className="text-muted-foreground" />
+                      <span>Aura Public Home</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleNavigate('telemetry')}>
                       <Activity size={13} className="text-primary" />
                       <span>Express Telemetry</span>
@@ -731,6 +783,23 @@ function MainLayout() {
             <ProtectedRoute allowedRoles={['ADMIN']} onNavigate={handleNavigate}>
               <ExpressPageTracker />
             </ProtectedRoute>
+          )}
+
+          {/* Public Aura Landing Page within authenticated shell */}
+          {['home', 'landing'].includes(currentRoute) && (
+            <AuraLandingPage
+              onNavigateToLogin={() => {
+                const targetDashboard =
+                  role === 'DOCTOR'
+                    ? 'doctor/dashboard'
+                    : role === 'PHARMACIST'
+                    ? 'pharmacist/dashboard'
+                    : role === 'PATIENT'
+                    ? 'patient/dashboard'
+                    : 'admin/dashboard';
+                handleNavigate(targetDashboard);
+              }}
+            />
           )}
 
           {currentRoute === 'swagger' && <SwaggerDocsView />}
